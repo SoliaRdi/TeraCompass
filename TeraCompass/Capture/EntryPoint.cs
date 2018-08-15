@@ -224,15 +224,6 @@ namespace Capture
                         case Direct3DVersion.Direct3D9:
                             _directXHook = new DXHookD3D9(_interface);
                             break;
-                        case Direct3DVersion.Direct3D10:
-                            _directXHook = new DXHookD3D10(_interface);
-                            break;
-                        case Direct3DVersion.Direct3D10_1:
-                            _directXHook = new DXHookD3D10_1(_interface);
-                            break;
-                        case Direct3DVersion.Direct3D11:
-                            _directXHook = new DXHookD3D11(_interface);
-                            break;
                         //case Direct3DVersion.Direct3D11_1:
                         //    _directXHook = new DXHookD3D11_1(_interface);
                         //    return;

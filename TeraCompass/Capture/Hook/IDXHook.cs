@@ -19,12 +19,6 @@ namespace Capture.Hook
             set;
         }
 
-        ScreenshotRequest Request
-        {
-            get;
-            set;
-        }
-
         void Hook();
 
         void Cleanup();

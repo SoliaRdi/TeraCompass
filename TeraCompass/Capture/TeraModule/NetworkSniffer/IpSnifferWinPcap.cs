@@ -31,8 +31,6 @@ namespace TeraCompass.NetworkSniffer
             _filter = filter;
             BufferSize = 1 << 24;
             _devices = WinPcapDeviceList.New();
-            //BasicTeraData.LogError(string.Join("\r\n",_devices.Select(x=>x.Description)),true,true);
-            //check for winpcap installed if not - exception to fallback to rawsockets
             _devices = null;
         }
 

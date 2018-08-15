@@ -68,7 +68,7 @@ namespace TeraCompass.ViewModels
 
 
 
-                Direct3DVersion direct3DVersion = Direct3DVersion.AutoDetect;
+                Direct3DVersion direct3DVersion = Direct3DVersion.Direct3D9;
 
                 CaptureConfig cc = new CaptureConfig()
                 {

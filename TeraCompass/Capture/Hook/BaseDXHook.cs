@@ -25,13 +25,6 @@ namespace Capture.Hook
             this.Timer = new Stopwatch();
             this.Timer.Start();
             this.FPS = new FramesPerSecond();
-
-            Interface.ScreenshotRequested += InterfaceEventProxy.ScreenshotRequestedProxyHandler;
-            Interface.DisplayText += InterfaceEventProxy.DisplayTextProxyHandler;
-            Interface.DrawOverlay += InterfaceEventProxy.DrawOverlayProxyHandler;
-            InterfaceEventProxy.ScreenshotRequested += new ScreenshotRequestedEvent(InterfaceEventProxy_ScreenshotRequested);
-            InterfaceEventProxy.DisplayText += new DisplayTextEvent(InterfaceEventProxy_DisplayText);
-            InterfaceEventProxy.DrawOverlay += InterfaceEventProxy_DrawOverlay;
         }
 
         ~BaseDXHook()
@@ -39,28 +32,7 @@ namespace Capture.Hook
             Dispose(false);
         }
 
-        void InterfaceEventProxy_DisplayText(DisplayTextEventArgs args)
-        {
-            TextDisplay = new TextDisplay()
-            {
-                Text = args.Text,
-                Duration = args.Duration
-            };
-        }
-
-        protected virtual void InterfaceEventProxy_ScreenshotRequested(ScreenshotRequest request)
-        {
-            
-            this.Request = request;
-        }
-
-        private void InterfaceEventProxy_DrawOverlay(DrawOverlayEventArgs args)
-        {
-            Overlays = new List<Common.IOverlay>();
-            if (args.Overlay != null)
-                Overlays.Add(args.Overlay);
-            IsOverlayUpdatePending = true;
-        }
+       
 
         protected Stopwatch Timer { get; set; }
 
@@ -69,9 +41,6 @@ namespace Capture.Hook
         /// </summary>
         protected FramesPerSecond FPS { get; set; }
 
-        protected TextDisplay TextDisplay { get; set; }
-
-        protected List<Common.IOverlay> Overlays { get; set; }
  
         protected bool IsOverlayUpdatePending { get; set; }
 
@@ -100,8 +69,6 @@ namespace Capture.Hook
         protected void Frame()
         {
             FPS.Frame();
-            if (TextDisplay != null && TextDisplay.Display) 
-                TextDisplay.Frame();
         }
 
         protected void DebugMessage(string message)
@@ -184,124 +151,7 @@ namespace Capture.Hook
             }
         }
 
-        /// <summary>
-        /// Process the capture based on the requested format.
-        /// </summary>
-        /// <param name="width">image width</param>
-        /// <param name="height">image height</param>
-        /// <param name="pitch">data pitch (bytes per row)</param>
-        /// <param name="format">target format</param>
-        /// <param name="pBits">IntPtr to the image data</param>
-        /// <param name="request">The original requets</param>
-        protected void ProcessCapture(int width, int height, int pitch, PixelFormat format, IntPtr pBits, ScreenshotRequest request)
-        {
-            if (request == null)
-                return;
-
-            if (format == PixelFormat.Undefined)
-            {
-                DebugMessage("Unsupported render target format");
-                return;
-            }
-
-            // Copy the image data from the buffer
-            int size = height * pitch;
-            var data = new byte[size];
-            Marshal.Copy(pBits, data, 0, size);
-
-            // Prepare the response
-            Screenshot response = null;
-
-            if (request.Format == Capture.Interface.ImageFormat.PixelData)
-            {
-                // Return the raw data
-                response = new Screenshot(request.RequestId, data)
-                {
-                    Format = request.Format,
-                    PixelFormat = format,
-                    Height = height,
-                    Width = width,
-                    Stride = pitch
-                };
-            }
-            else 
-            {
-                // Return an image
-                using (var bm = data.ToBitmap(width, height, pitch, format))
-                {
-                    System.Drawing.Imaging.ImageFormat imgFormat = System.Drawing.Imaging.ImageFormat.Bmp;
-                    switch (request.Format)
-                    {
-                        case Capture.Interface.ImageFormat.Jpeg:
-                            imgFormat = System.Drawing.Imaging.ImageFormat.Jpeg;
-                            break;
-                        case Capture.Interface.ImageFormat.Png:
-                            imgFormat = System.Drawing.Imaging.ImageFormat.Png;
-                            break;
-                    }
-
-                    response = new Screenshot(request.RequestId, bm.ToByteArray(imgFormat))
-                    {
-                        Format = request.Format,
-                        Height = bm.Height,
-                        Width = bm.Width
-                    };
-                }
-            }
-
-            // Send the response
-            SendResponse(response);
-        }
-
-        protected void SendResponse(Screenshot response)
-        {
-            System.Threading.Tasks.Task.Factory.StartNew(() =>
-            {
-                try
-                {
-                    Interface.SendScreenshotResponse(response);
-                    LastCaptureTime = Timer.Elapsed;
-                }
-                catch (RemotingException)
-                {
-                    // Ignore remoting exceptions
-                    // .NET Remoting will throw an exception if the host application is unreachable
-                }
-                catch (Exception e)
-                {
-                    DebugMessage(e.ToString());
-                }
-            });
-        }
-
-        protected void ProcessCapture(Stream stream, ScreenshotRequest request)
-        {
-            ProcessCapture(ReadFullStream(stream), request);
-        }
-
-        protected void ProcessCapture(byte[] bitmapData, ScreenshotRequest request)
-        {
-            try
-            {
-                if (request != null)
-                {
-                    Interface.SendScreenshotResponse(new Screenshot(request.RequestId, bitmapData)
-                    {
-                        Format = request.Format,
-                    });
-                }
-                LastCaptureTime = Timer.Elapsed;
-            }
-            catch (RemotingException)
-            {
-                // Ignore remoting exceptions
-                // .NET Remoting will throw an exception if the host application is unreachable
-            }
-            catch (Exception e)
-            {
-                DebugMessage(e.ToString());
-            }
-        }
+       
 
 
         private ImageCodecInfo GetEncoder(System.Drawing.Imaging.ImageFormat format)
@@ -332,13 +182,7 @@ namespace Capture.Hook
             set;
         }
 
-        protected bool CaptureThisFrame
-        {
-            get
-            {
-                return ((Timer.Elapsed - LastCaptureTime) > CaptureDelay) || Request != null;
-            }
-        }
+        protected bool CaptureThisFrame => ((Timer.Elapsed - LastCaptureTime) > CaptureDelay);
         protected TimeSpan CaptureDelay { get; set; }
 
         #region IDXHook Members
@@ -358,13 +202,6 @@ namespace Capture.Hook
                 _config = value;
                 CaptureDelay = new TimeSpan(0, 0, 0, 0, (int)((1.0 / (double)_config.TargetFramesPerSecond) * 1000.0));
             }
-        }
-
-        private ScreenshotRequest _request;
-        public ScreenshotRequest Request
-        {
-            get { return _request; }
-            set { Interlocked.Exchange(ref _request, value);  }
         }
 
         protected List<Hook> Hooks = new List<Hook>();
@@ -410,15 +247,6 @@ namespace Capture.Hook
 
                         Hooks.Clear();
                     }
-
-                    try
-                    {
-                        // Remove the event handlers
-                        Interface.ScreenshotRequested -= InterfaceEventProxy.ScreenshotRequestedProxyHandler;
-                        Interface.DisplayText -= InterfaceEventProxy.DisplayTextProxyHandler;
-                        Interface.DrawOverlay -= InterfaceEventProxy_DrawOverlay;
-                    }
-                    catch (RemotingException) { } // Ignore remoting exceptions (host process may have been closed)
                 }
                 catch
                 {

@@ -87,20 +87,14 @@ namespace TeraCompass.ViewModels
         {
             var myPos = Vector3ToVector2(PacketProcessor.Instance.EntityTracker.CompassUser.Position);
             var radarCenter = new Vector2(150f, 150f);
-            //Obtain vec2 of player
             Vector2 screenPos = Vector3ToVector2(entity.Position);
-            //Reduce it to a direction - vector
             screenPos = myPos - screenPos;
-            //Scale it and clip it if it is out of our radar - bounds
             float distance = screenPos.Length() * (0.02f * UIState.Zoom);
             distance = Math.Min(distance, 150f -UIState.PlayerSize);
             screenPos = Vector2.Normalize(screenPos);
             screenPos *= distance;
-            //Apply it to the center of the radar
             screenPos += radarCenter;
-            //Rotate it according to our yaw
             screenPos = RotatePoint(screenPos, radarCenter, 90f);
-            //reDraw the player
             return new Vector2(screenPos.X, screenPos.Y);
         }
     }

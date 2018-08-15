@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Threading;
-using Capture.Hook.Common;
+
 
 namespace Capture.Interface
 {
@@ -14,16 +14,11 @@ namespace Capture.Interface
     public delegate void RecordingStoppedEvent();
     [Serializable]
     public delegate void MessageReceivedEvent(MessageReceivedEventArgs message);
-    [Serializable]
-    public delegate void ScreenshotReceivedEvent(ScreenshotReceivedEventArgs response);
+
     [Serializable]
     public delegate void DisconnectedEvent();
-    [Serializable]
-    public delegate void ScreenshotRequestedEvent(ScreenshotRequest request);
-    [Serializable]
-    public delegate void DisplayTextEvent(DisplayTextEventArgs args);
-    [Serializable]
-    public delegate void DrawOverlayEvent(DrawOverlayEventArgs args);
+
+
 
     [Serializable]
     public class CaptureInterface : MarshalByRefObject
@@ -42,10 +37,7 @@ namespace Capture.Interface
         /// </summary>
         public event MessageReceivedEvent RemoteMessage;
         
-        /// <summary>
-        /// Server event for receiving screenshot image data
-        /// </summary>
-        public event ScreenshotReceivedEvent ScreenshotReceived;
+
         
         #endregion
 
@@ -61,25 +53,13 @@ namespace Capture.Interface
         /// </summary>
         public event RecordingStoppedEvent RecordingStopped;
 
-        /// <summary>
-        /// Client event used to communicate to the client that it is time to create a screenshot
-        /// </summary>
-        public event ScreenshotRequestedEvent ScreenshotRequested;
+
 
         /// <summary>
         /// Client event used to notify the hook to exit
         /// </summary>
         public event DisconnectedEvent Disconnected;
 
-        /// <summary>
-        /// Client event used to display a piece of text in-game
-        /// </summary>
-        public event DisplayTextEvent DisplayText;
-        
-        /// <summary>
-        ///     Client event used to (re-)draw an overlay in-game.
-        /// </summary>
-        public event DrawOverlayEvent DrawOverlay;
 
         #endregion
 
@@ -120,85 +100,11 @@ namespace Capture.Interface
 
         #region Still image Capture
 
-        object _lock = new object();
-        Guid? _requestId = null;
-        Action<Screenshot> _completeScreenshot = null;
-        ManualResetEvent _wait = new ManualResetEvent(false);
 
-        /// <summary>
-        /// Get a fullscreen screenshot with the default timeout of 2 seconds
-        /// </summary>
-        public Screenshot GetScreenshot()
-        {
-            return GetScreenshot(Rectangle.Empty, new TimeSpan(0, 0, 2), null, ImageFormat.Bitmap);
-        }
 
-        /// <summary>
-        /// Get a screenshot of the specified region
-        /// </summary>
-        /// <param name="region">the region to capture (x=0,y=0 is top left corner)</param>
-        /// <param name="timeout">maximum time to wait for the screenshot</param>
-        public Screenshot GetScreenshot(Rectangle region, TimeSpan timeout, Size? resize, ImageFormat format)
-        {
-            lock (_lock)
-            {
-                Screenshot result = null;
-                _requestId = Guid.NewGuid();
-                _wait.Reset();
 
-                SafeInvokeScreenshotRequested(new ScreenshotRequest(_requestId.Value, region)
-                {
-                    Format = format,
-                    Resize = resize,
-                });
 
-                _completeScreenshot = (sc) =>
-                {
-                    try
-                    {
-                        Interlocked.Exchange(ref result, sc);
-                    }
-                    catch
-                    {
-                    }
-                    _wait.Set();
-                        
-                };
 
-                _wait.WaitOne(timeout);
-                _completeScreenshot = null;
-                return result;
-            }
-        }
-
-        public IAsyncResult BeginGetScreenshot(Rectangle region, TimeSpan timeout, AsyncCallback callback = null, Size? resize = null, ImageFormat format = ImageFormat.Bitmap)
-        {
-            Func<Rectangle, TimeSpan, Size?, ImageFormat, Screenshot> getScreenshot = GetScreenshot;
-            
-            return getScreenshot.BeginInvoke(region, timeout, resize, format, callback, getScreenshot);
-        }
-
-        public Screenshot EndGetScreenshot(IAsyncResult result)
-        {
-            Func<Rectangle, TimeSpan, Size?, ImageFormat, Screenshot> getScreenshot = result.AsyncState as Func<Rectangle, TimeSpan, Size?, ImageFormat, Screenshot>;
-            if (getScreenshot != null)
-            {
-                return getScreenshot.EndInvoke(result);
-            }
-            else
-                return null;
-        }
-
-        public void SendScreenshotResponse(Screenshot screenshot)
-        {
-            if (_requestId != null && screenshot != null && screenshot.RequestId == _requestId.Value)
-            {
-                if (_completeScreenshot != null)
-                {
-                    _completeScreenshot(screenshot);
-                }
-            }
-        }
 
         #endregion
 
@@ -226,40 +132,11 @@ namespace Capture.Interface
             SafeInvokeMessageRecevied(new MessageReceivedEventArgs(messageType, message));
         }
 
-        /// <summary>
-        /// Display text in-game for the default duration of 5 seconds
-        /// </summary>
-        /// <param name="text"></param>
-        public void DisplayInGameText(string text)
-        {
-            DisplayInGameText(text, new TimeSpan(0, 0, 5));
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="duration"></param>
-        public void DisplayInGameText(string text, TimeSpan duration)
-        {
-            if (duration.TotalMilliseconds <= 0)
-                throw new ArgumentException("Duration must be larger than 0", "duration");
-            SafeInvokeDisplayText(new DisplayTextEventArgs(text, duration));
-        }
 
-        /// <summary>
-        /// Replace the in-game overlay with the one provided.
-        /// 
-        /// Note: this is not designed for fast updates (i.e. only a couple of times per second)
-        /// </summary>
-        /// <param name="overlay"></param>
-        public void DrawOverlayInGame(IOverlay overlay)
-        {
-            SafeInvokeDrawOverlay(new DrawOverlayEventArgs()
-            {
-                Overlay = overlay
-            });
-        }
+
+
+
 
         #endregion
 
@@ -337,54 +214,7 @@ namespace Capture.Interface
             }
         }
 
-        private void SafeInvokeScreenshotRequested(ScreenshotRequest eventArgs)
-        {
-            if (ScreenshotRequested == null)
-                return;         //No Listeners
-
-            ScreenshotRequestedEvent listener = null;
-            Delegate[] dels = ScreenshotRequested.GetInvocationList();
-
-            foreach (Delegate del in dels)
-            {
-                try
-                {
-                    listener = (ScreenshotRequestedEvent)del;
-                    listener.Invoke(eventArgs);
-                }
-                catch (Exception)
-                {
-                    //Could not reach the destination, so remove it
-                    //from the list
-                    ScreenshotRequested -= listener;
-                }
-            }
-        }
-
-        private void SafeInvokeScreenshotReceived(ScreenshotReceivedEventArgs eventArgs)
-        {
-            if (ScreenshotReceived == null)
-                return;         //No Listeners
-
-            ScreenshotReceivedEvent listener = null;
-            Delegate[] dels = ScreenshotReceived.GetInvocationList();
-
-            foreach (Delegate del in dels)
-            {
-                try
-                {
-                    listener = (ScreenshotReceivedEvent)del;
-                    listener.Invoke(eventArgs);
-                }
-                catch (Exception)
-                {
-                    //Could not reach the destination, so remove it
-                    //from the list
-                    ScreenshotReceived -= listener;
-                }
-            }
-        }
-
+       
         private void SafeInvokeDisconnected()
         {
             if (Disconnected == null)
@@ -405,54 +235,6 @@ namespace Capture.Interface
                     //Could not reach the destination, so remove it
                     //from the list
                     Disconnected -= listener;
-                }
-            }
-        }
-
-        private void SafeInvokeDisplayText(DisplayTextEventArgs displayTextEventArgs)
-        {
-            if (DisplayText == null)
-                return;         //No Listeners
-
-            DisplayTextEvent listener = null;
-            Delegate[] dels = DisplayText.GetInvocationList();
-
-            foreach (Delegate del in dels)
-            {
-                try
-                {
-                    listener = (DisplayTextEvent)del;
-                    listener.Invoke(displayTextEventArgs);
-                }
-                catch (Exception)
-                {
-                    //Could not reach the destination, so remove it
-                    //from the list
-                    DisplayText -= listener;
-                }
-            }
-        }
-
-        private void SafeInvokeDrawOverlay(DrawOverlayEventArgs drawOverlayEventArgs)
-        {
-            if (DrawOverlay == null)
-                return; //No Listeners
-
-            DrawOverlayEvent listener = null;
-            var dels = DrawOverlay.GetInvocationList();
-
-            foreach (var del in dels)
-            {
-                try
-                {
-                    listener = (DrawOverlayEvent)del;
-                    listener.Invoke(drawOverlayEventArgs);
-                }
-                catch (Exception)
-                {
-                    //Could not reach the destination, so remove it
-                    //from the list
-                    DrawOverlay -= listener;
                 }
             }
         }
@@ -486,10 +268,7 @@ namespace Capture.Interface
         /// </summary>
         public event RecordingStoppedEvent RecordingStopped;
 
-        /// <summary>
-        /// Client event used to communicate to the client that it is time to create a screenshot
-        /// </summary>
-        public event ScreenshotRequestedEvent ScreenshotRequested;
+
 
         /// <summary>
         /// Client event used to notify the hook to exit
@@ -499,12 +278,9 @@ namespace Capture.Interface
         /// <summary>
         /// Client event used to display in-game text
         /// </summary>
-        public event DisplayTextEvent DisplayText;
+ 
 
-        /// <summary>
-        ///     Client event used to (re-)draw an overlay in-game.
-        /// </summary>
-        public event DrawOverlayEvent DrawOverlay;
+
 
         #endregion
 
@@ -537,23 +313,6 @@ namespace Capture.Interface
             if (Disconnected != null)
                 Disconnected();
         }
-
-        public void ScreenshotRequestedProxyHandler(ScreenshotRequest request)
-        {
-            if (ScreenshotRequested != null)
-                ScreenshotRequested(request);
-        }
-
-        public void DisplayTextProxyHandler(DisplayTextEventArgs args)
-        {
-            if (DisplayText != null)
-                DisplayText(args);
-        }
-        
-        public void DrawOverlayProxyHandler(DrawOverlayEventArgs args)
-        {
-            if (DrawOverlay != null)
-                DrawOverlay(args);
-        }
+       
     }
 }

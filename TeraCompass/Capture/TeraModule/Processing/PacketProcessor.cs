@@ -35,7 +35,7 @@ namespace TeraCompass.Processing
         internal PacketProcessingFactory PacketProcessing = new PacketProcessingFactory();
         public Server Server;
         internal UserLogoTracker UserLogoTracker = new UserLogoTracker();
-
+        Type UnknownType = typeof(UnknownMessage);
         private PacketProcessor()
         {
             TeraSniffer.Instance.NewConnection += HandleNewConnection;
@@ -91,6 +91,7 @@ namespace TeraCompass.Processing
         }
         private void PacketAnalysisLoop()
         {
+            
             while (_keepAlive)
             {
                 var successDequeue = TeraSniffer.Instance.Packets.TryDequeue(out Message obj);
@@ -100,12 +101,9 @@ namespace TeraCompass.Processing
                     continue;
                 }
                 var message = MessageFactory.Create(obj);
-                if (message.GetType() == typeof(UnknownMessage)) { continue; }
+                if (message.GetType() == UnknownType) { continue; }
 
-                if (!PacketProcessing.Process(message))
-                {
-                    //Unprocessed packet
-                }
+                PacketProcessing.Process(message);
             }
         }
     }

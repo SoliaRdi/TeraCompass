@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using Capture.GUI;
 using Capture.Interface;
 using SharpDX.Direct3D9;
-using Capture.Hook.Common;
 using ImGuiNET;
 using System.Linq;
 using System.Text;
@@ -39,7 +38,6 @@ namespace Capture.Hook
         Query _query;
         SharpDX.Direct3D9.Font _font;
         bool _queryIssued;
-        ScreenshotRequest _requestCopy;
         bool _renderTargetCopyLocked = false;
         Surface _renderTargetCopy;
         Surface _resolvedTarget;
@@ -221,8 +219,7 @@ namespace Capture.Hook
             {
                 resethooked = true;
             }
-            if (_overlayEngine != null)
-                _overlayEngine.BeforeDeviceReset();
+
             
             Cleanup();
             hresult = Direct3DDevice_ResetHook.Original(devicePtr, ref presentParameters);
@@ -273,7 +270,7 @@ namespace Capture.Hook
             return Direct3DDevice_EndSceneHook.Original(devicePtr);
         }
 
-        Capture.Hook.DX9.DXOverlayEngine _overlayEngine;
+
         private TimeSpan Elapsed = TimeSpan.Zero;
         /// <summary>
         /// Implementation of capturing from the render target of the Direct3D9 Device (or DeviceEx)
@@ -486,33 +483,6 @@ namespace Capture.Hook
                 }
 
             #endregion
-        }
-
-        private SharpDX.DataRectangle LockRenderTarget(Surface _renderTargetCopy, out SharpDX.Rectangle rect)
-        {
-            if (_requestCopy.RegionToCapture.Height > 0 && _requestCopy.RegionToCapture.Width > 0)
-            {
-                rect = new SharpDX.Rectangle(_requestCopy.RegionToCapture.Left, _requestCopy.RegionToCapture.Top, _requestCopy.RegionToCapture.Width, _requestCopy.RegionToCapture.Height);
-            }
-            else
-            {
-                rect = new SharpDX.Rectangle(0, 0, _renderTargetCopy.Description.Width, _renderTargetCopy.Description.Height);
-            }
-            return _renderTargetCopy.LockRectangle(rect, LockFlags.ReadOnly);
-        }
-
-        private void CreateResources(Device device, int width, int height, Format format)
-        {
-            if (_resourcesInitialised) return;
-            _resourcesInitialised = true;
-
-            // Create offscreen surface to use as copy of render target data
-            _renderTargetCopy = ToDispose(Surface.CreateOffscreenPlain(device, width, height, format, Pool.SystemMemory));
-
-            // Create our resolved surface (resizing if necessary and to resolve any multi-sampling)
-            _resolvedTarget = ToDispose(Surface.CreateRenderTarget(device, width, height, format, MultisampleType.None, 0, false));
-
-            _query = ToDispose(new Query(device, QueryType.Event));
         }
     }
 }
