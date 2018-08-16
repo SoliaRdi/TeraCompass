@@ -1,5 +1,6 @@
 # Introduction 
 DirectX hook+ImGUI internal compass overlay with different options.
+Right now works only for players.
 
 # Requirements
 Like in https://github.com/neowutran/ShinraMeter/wiki prerequisite but with .net framework 4.7.2 
