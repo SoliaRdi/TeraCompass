@@ -1,11 +1,7 @@
 ﻿using System;
 using SharpDX;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SharpDX
+namespace Capture.SharpDx
 {
 
     // From SharpDX.Toolkit

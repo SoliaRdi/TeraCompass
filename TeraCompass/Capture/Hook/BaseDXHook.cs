@@ -12,10 +12,11 @@ using System.Diagnostics;
 using Capture.Interface;
 using System.Threading;
 using Capture.GUI;
+using Capture.SharpDx;
 
 namespace Capture.Hook
 {
-    internal abstract class BaseDXHook: SharpDX.Component, IDXHook
+    internal abstract class BaseDXHook: Component, IDXHook
     {
         protected readonly ClientCaptureInterfaceEventProxy InterfaceEventProxy = new ClientCaptureInterfaceEventProxy();
         
