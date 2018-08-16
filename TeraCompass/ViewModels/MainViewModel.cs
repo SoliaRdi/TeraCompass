@@ -50,16 +50,12 @@ namespace TeraCompass.ViewModels
                         Thread.Sleep(500);
                     }
                 }
-                // Simply attach to the first one found.
-                
-                // If the process doesn't have a mainwindowhandle yet, skip it (we need to be able to get the hwnd to set foreground etc)
                 if (process.MainWindowHandle == IntPtr.Zero)
                 {
                     LogEvent("no MainWindowHandle...");
                     return;
                 }
 
-                // Skip if the process is already hooked (and we want to hook multiple applications)
                 if (Capture.Hook.HookManager.IsHooked(process.Id))
                 {
                     LogEvent("Game already hooked...");

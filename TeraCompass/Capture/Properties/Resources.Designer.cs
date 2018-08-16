@@ -59,5 +59,113 @@ namespace Capture.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom position.
+        /// </summary>
+        internal static string CustomPosition {
+            get {
+                return ResourceManager.GetString("CustomPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter by classes.
+        /// </summary>
+        internal static string FilterByClasses {
+            get {
+                return ResourceManager.GetString("FilterByClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Guild name.
+        /// </summary>
+        internal static string GuildName {
+            get {
+                return ResourceManager.GetString("GuildName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Guild statistic.
+        /// </summary>
+        internal static string GuildStat {
+            get {
+                return ResourceManager.GetString("GuildStat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colors for player relation.
+        /// </summary>
+        internal static string RelationColors {
+            get {
+                return ResourceManager.GetString("RelationColors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Without Guild.
+        /// </summary>
+        internal static string SelectedGuildName {
+            get {
+                return ResourceManager.GetString("SelectedGuildName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings for filter by class            .
+        /// </summary>
+        internal static string SetFilterByClass {
+            get {
+                return ResourceManager.GetString("SetFilterByClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        internal static string Settings {
+            get {
+                return ResourceManager.GetString("Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Perfomance test.
+        /// </summary>
+        internal static string ShowFPS {
+            get {
+                return ResourceManager.GetString("ShowFPS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show nicknames.
+        /// </summary>
+        internal static string ShowNicknames {
+            get {
+                return ResourceManager.GetString("ShowNicknames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show only enemy players.
+        /// </summary>
+        internal static string ShowOnlyEnemy {
+            get {
+                return ResourceManager.GetString("ShowOnlyEnemy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Top right.
+        /// </summary>
+        internal static string TopRight {
+            get {
+                return ResourceManager.GetString("TopRight", resourceCulture);
+            }
+        }
     }
 }

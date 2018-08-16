@@ -9,6 +9,7 @@ using ImGuiNET;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Capture.Properties;
 using Capture.TeraModule.CameraFinder;
 using SharpDX;
 using TeraCompass.Processing;
@@ -33,21 +34,17 @@ namespace Capture.Hook
         Hook<Direct3D9Device_PresentDelegate> Direct3DDevice_PresentHook = null;
         Hook<Direct3D9DeviceEx_PresentExDelegate> Direct3DDeviceEx_PresentExHook = null;
         object _lockRenderTarget = new object();
-        private bool resethooked;
-        bool _resourcesInitialised;
+
+
         Query _query;
         SharpDX.Direct3D9.Font _font;
-        bool _queryIssued;
-        bool _renderTargetCopyLocked = false;
+
         Surface _renderTargetCopy;
         Surface _resolvedTarget;
 
         public ImGuiRender imGuiRender;
         Stopwatch PerfomanseTester = new Stopwatch();
-        protected override string HookName
-        {
-            get { return "DXHookD3D9"; }
-        }
+        protected override string HookName => "DXHookD3D9";
 
         List<IntPtr> id3dDeviceFunctionAddresses = new List<IntPtr>();
         //List<IntPtr> id3dDeviceExFunctionAddresses = new List<IntPtr>();
@@ -60,7 +57,6 @@ namespace Capture.Hook
         {
             this.DebugMessage("Hook: Begin");
             // First we need to determine the function address for IDirect3DDevice9
-            Device device;
             id3dDeviceFunctionAddresses = new List<IntPtr>();
             //id3dDeviceExFunctionAddresses = new List<IntPtr>();
             this.DebugMessage("Hook: Before device creation");
@@ -68,6 +64,7 @@ namespace Capture.Hook
             {
                 using (var renderForm = new System.Windows.Forms.Form())
                 {
+                    Device device;
                     using (device = new Device(d3d, 0, DeviceType.NullReference, IntPtr.Zero, CreateFlags.HardwareVertexProcessing, new PresentParameters() {BackBufferWidth = 1, BackBufferHeight = 1, DeviceWindowHandle = renderForm.Handle}))
                     {
                         this.DebugMessage("Hook: Device created");
@@ -157,7 +154,7 @@ namespace Capture.Hook
 
             TeraSniffer.Instance.Enabled = true;
             TeraSniffer.Instance.Warning += DebugMessage;
-            PacketProcessor.Instance.Connected += s => { DebugMessage("The connection is established"); };
+            PacketProcessor.Instance.Connected += s => { Debug.Write("The connection is established"); };
         }
 
         /// <summary>
@@ -167,15 +164,15 @@ namespace Capture.Hook
         {
             lock (_lockRenderTarget)
             {
-                _resourcesInitialised = false;
+
                 
                 RemoveAndDispose(ref _renderTargetCopy);
-                _renderTargetCopyLocked = false;
+
                 if(imGuiRender!=null)
                     RemoveAndDispose(ref imGuiRender);
                 RemoveAndDispose(ref _resolvedTarget);
                 RemoveAndDispose(ref _query);
-                _queryIssued = false;
+
 
                 RemoveAndDispose(ref _font);
             }
@@ -213,19 +210,11 @@ namespace Capture.Hook
         /// <returns></returns>
         int ResetHook(IntPtr devicePtr, ref PresentParameters presentParameters)
         {
-            var hresult = Result.Ok.Code;
-           
-            if (imGuiRender != null)
-            {
-                resethooked = true;
-            }
-
-            
             Cleanup();
-            hresult = Direct3DDevice_ResetHook.Original(devicePtr, ref presentParameters);
+            var hresult = Direct3DDevice_ResetHook.Original(devicePtr, ref presentParameters);
             var win32error= Result.GetResultFromWin32Error(hresult);
-            Debug.Write($"{win32error} {win32error.Failure} hresult={hresult}");
-            // Ensure certain overlay resources have performed necessary pre-reset tasks
+            if(win32error.Failure)
+                Debug.Write($"{win32error} hresult={hresult}");
             
             return hresult;
         }
@@ -289,7 +278,7 @@ namespace Capture.Hook
                         IntPtr handle = CurrentProcess.MainWindowHandle;
                         NativeMethods.Rect rect = new NativeMethods.Rect();
                         NativeMethods.GetWindowRect(handle, ref rect);
-                        imGuiRender = ToDispose<ImGuiRender>(new ImGuiRender(device, rect, Interface, handle));
+                        imGuiRender = ToDispose(new ImGuiRender(device, rect, Interface, handle));
                     }
                     else if(imGuiRender!=null)
                     {
@@ -311,14 +300,11 @@ namespace Capture.Hook
                         {
                             window_pos = ImGui.GetWindowPosition();
                             window_size = ImGui.GetWindowSize();
-
-                            
-                            
                             if (ImGuiNative.igBeginPopupContextWindow("Options", 1, true))
                             {
-                                if (ImGui.MenuItem("Кастомния позиция", null, UIState.OverlayCorner == -1, true)) UIState.OverlayCorner = -1;
-                                if (ImGui.MenuItem("Верхний угол", null, UIState.OverlayCorner == 0, true)) UIState.OverlayCorner = 0;
-                                if (ImGui.MenuItem("Настройки", null, UIState.SettingsOpened, true)) UIState.SettingsOpened = !UIState.SettingsOpened;
+                                if (ImGui.MenuItem(Resources.CustomPosition, null, UIState.OverlayCorner == -1, true)) UIState.OverlayCorner = -1;
+                                if (ImGui.MenuItem(Resources.TopRight, null, UIState.OverlayCorner == 0, true)) UIState.OverlayCorner = 0;
+                                if (ImGui.MenuItem(Resources.Settings, null, UIState.SettingsOpened, true)) UIState.SettingsOpened = !UIState.SettingsOpened;
                                 
                                 ImGuiNative.igEndPopup();
                             }
@@ -358,7 +344,10 @@ namespace Capture.Hook
                         {
                             if (UIState.StatisticsOpened)
                             {
-                                var GuldList = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values.ToArray().GroupBy(x => x.GuildName.Length == 0 ? "Без гильдии" : x.GuildName, (key, g) => new {GuildName = key, Players = g.ToList()}).OrderByDescending(x => x.Players.Count).ToHashSet();
+                                var GuldList = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values
+                                    .ToArray()
+                                    .GroupBy(x => x.GuildName.Length == 0 ? Resources.SelectedGuildName : x.GuildName, (key, g) => new {GuildName = key, Players = g.ToList()})
+                                    .OrderByDescending(x => x.Players.Count).ToHashSet();
                                 if (GuldList.Count>0)
                                 {
                                     ImGui.SetNextWindowPos(new Vector2(window_pos.X, window_pos.Y + window_size.Y), Condition.Always, window_pos_pivot);
@@ -379,7 +368,7 @@ namespace Capture.Hook
                                         ImGuiNative.igBeginGroup();
                                         ImGui.BeginChild("item view", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true); // Leave room for 1 line below us
 
-                                        ImGui.TextUnformatted(($"Название гильдии {UIState.SelectedGuildName}\n"));
+                                        ImGui.TextUnformatted(($"{Resources.GuildName} {UIState.SelectedGuildName}\n"));
                                         ImGui.Columns(3, null, true);
 
                                         var players = GuldList.SingleOrDefault(x => x.GuildName == UIState.SelectedGuildName)?.Players?.GroupBy(x => x.PlayerClass, (key, g) => new {Class = key, Players = g.ToList()});
@@ -413,20 +402,20 @@ namespace Capture.Hook
                         {
                             if (ImGui.BeginWindow("Settings", ref UIState.SettingsOpened, new Vector2(350, 400), 0.3f, WindowFlags.NoFocusOnAppearing|WindowFlags.AlwaysAutoResize))
                             {
-                                ImGui.Checkbox("Статистика по гильдиям", ref UIState.StatisticsOpened);
-                                ImGui.Checkbox("Показывать только врагов", ref UIState.CaptureOnlyEnemy);
-                                ImGui.Checkbox("Фильтр по классам", ref UIState.FilterByClassess);
-                                ImGui.Checkbox("Показывать ники", ref UIState.ShowNicknames);
-                                ImGui.Checkbox("Тест производительности", ref UIState.ShowFPS);
+                                ImGui.Checkbox(Resources.GuildStat, ref UIState.StatisticsOpened);
+                                ImGui.Checkbox(Resources.ShowOnlyEnemy, ref UIState.CaptureOnlyEnemy);
+                                ImGui.Checkbox(Resources.FilterByClasses, ref UIState.FilterByClassess);
+                                ImGui.Checkbox(Resources.ShowNicknames, ref UIState.ShowNicknames);
+                                ImGui.Checkbox(Resources.ShowFPS, ref UIState.ShowFPS);
                                 ImGui.SliderFloat("Zoom", ref UIState.Zoom, 1, 20,$"Zoom={UIState.Zoom}",2f);
                                 if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
                                     ImGui.SetTooltip($"{UIState.Zoom:F2}");
                                 ImGui.SliderInt("PlayerSize", ref UIState.PlayerSize, 1, 10, $"PlayerSize = {UIState.PlayerSize}");
                                 if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
                                     ImGui.SetTooltip($"{UIState.PlayerSize}");
-                                if (ImGui.CollapsingHeader("Настройки фильтра по классам                      ", TreeNodeFlags.CollapsingHeader|TreeNodeFlags.AllowItemOverlap))
+                                if (ImGui.CollapsingHeader(Resources.SetFilterByClass, TreeNodeFlags.CollapsingHeader|TreeNodeFlags.AllowItemOverlap))
                                 {
-                                    ImGui.TextUnformatted("Common игноируется");
+                                    ImGui.TextUnformatted("Common ignored");
                                     ImGui.Columns(3, null, false);
                                     foreach (PlayerClass i in Enum.GetValues(typeof(PlayerClass)))
                                     {
@@ -442,7 +431,7 @@ namespace Capture.Hook
                                     ImGui.Columns(1,null,false);
                                 }
                                 
-                                if (ImGui.CollapsingHeader("Цвета отношения к игроку", TreeNodeFlags.CollapsingHeader))
+                                if (ImGui.CollapsingHeader(Resources.RelationColors, TreeNodeFlags.CollapsingHeader))
                                 {
                                     var keys = UIState.RelationColors.Keys.ToArray();
                                     for (int i = 0; i < keys.Length; i++)

@@ -20,7 +20,7 @@ namespace Capture.GUI
         public static bool SettingsOpened= false;
         public static bool StatisticsOpened = false;
         public static bool CaptureOnlyEnemy = false;
-        public static string SelectedGuildName = "Без гильдии";
+        public static string SelectedGuildName = Properties.Resources.SelectedGuildName;
         public static HashSet<RelationType> FriendlyTypes = new HashSet<RelationType>
         {
             RelationType.Casual,RelationType.GuildMember,RelationType.MyRaid,RelationType.RaidMyParty

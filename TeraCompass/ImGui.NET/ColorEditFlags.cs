@@ -1,8 +1,11 @@
-﻿namespace ImGuiNET
+﻿using System;
+
+namespace ImGuiNET
 {
     /// <summary>
     /// Enumeration for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
     /// </summary>
+    [Flags]
     public enum ColorEditFlags : int
     {
         Default = 0,

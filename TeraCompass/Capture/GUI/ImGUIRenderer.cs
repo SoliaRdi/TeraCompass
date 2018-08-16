@@ -168,14 +168,14 @@ namespace Capture.GUI
             windowSize = windowRect;
             //foreach (RAWINPUTDEVICELIST d in GetAllRawDevices())
             //{
-            //    IPCDebugMessage("found handle: " + d.hDevice + " type:" + d.dwType);
+            //    Debug.Write("found handle: " + d.hDevice + " type:" + d.dwType);
             //    if (d.dwType == RawDeviceType.RIM_TYPEKEYBOARD)
             //    {
-            //        IPCDebugMessage("got keyboard: " + d.hDevice);
+            //        Debug.Write("got keyboard: " + d.hDevice);
             //    }
             //    if (d.dwType == RawDeviceType.RIM_TYPEMOUSE)
             //    {
-            //        IPCDebugMessage("got mouse: " + d.hDevice);
+            //        Debug.Write("got mouse: " + d.hDevice);
             //    }
             //}
             
@@ -242,17 +242,17 @@ namespace Capture.GUI
                     }
                     if (inp.header.dwType == RawDeviceType.RIM_TYPEKEYBOARD)
                     {
-                        IPCDebugMessage($"key: {(Keys) inp.keyboard.VKey}");
+                        Debug.Write($"key: {(Keys) inp.keyboard.VKey}");
                     }
                     if (inp.header.dwType == RawDeviceType.RIM_TYPEHID)
                     {
-                        IPCDebugMessage($"uknown device");
+                        Debug.Write($"uknown device");
                     }
                 }
             }
             catch (Exception ex)
             {
-                IPCDebugMessage("ERROR input: " + ex.InnerException);
+                Debug.Write("ERROR input: " + ex.InnerException);
             }
             return res;
         }
@@ -264,19 +264,7 @@ namespace Capture.GUI
 
 
 
-        protected void IPCDebugMessage(string message)
-        {
-            try
-            {
-                Interface.Message(MessageType.Debug, message);
-            }
-            catch (RemotingException)
-            {
-            }
-            catch (Exception)
-            {
-            }
-        }
+
 
         private static unsafe void memcpy(void* dst, void* src, int count)
         {
@@ -382,7 +370,7 @@ namespace Capture.GUI
             {
                 NativeMethods.Point p;
                 NativeMethods.GetCursorPos(out p);
-                //IPCDebugMessage($"px:{p.X} py:{p.Y}");
+                //Debug.Write($"px:{p.X} py:{p.Y}");
                 //NativeMethods.ScreenToClient(_windowHandle, ref p);
                 mouseState.X = p.X;
                 mouseState.Y = p.Y;
@@ -391,17 +379,12 @@ namespace Capture.GUI
             }
             else
             {
-                //NativeMethods.Point p;
-                //NativeMethods.GetCursorPos(out p);
-                //mouseState.X = p.X;
-                //mouseState.Y = p.Y;
                 io.MousePosition = new System.Numerics.Vector2(-1f, -1f);
             }
 
             io.MouseDown[0] = mouseState.LMB;
             io.MouseDown[1] = mouseState.RMB;
             io.MouseDown[2] = mouseState.MMB;
-            //io.WantCaptureKeyboard = true;
             float newWheelPos = mouseState.Wheel;
             float delta = newWheelPos - _wheelPosition;
             _wheelPosition = (int) newWheelPos;

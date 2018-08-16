@@ -118,39 +118,39 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="CustomPosition" xml:space="preserve">
-    <value>Custom position</value>
+    <value>Кастомния позиция</value>
   </data>
   <data name="FilterByClasses" xml:space="preserve">
-    <value>Filter by classes</value>
+    <value>Фильтр по классам</value>
   </data>
   <data name="GuildName" xml:space="preserve">
-    <value>Guild name</value>
+    <value>Название гильдии</value>
   </data>
   <data name="GuildStat" xml:space="preserve">
-    <value>Guild statistic</value>
+    <value>Статистика по гильдиям</value>
   </data>
   <data name="RelationColors" xml:space="preserve">
-    <value>Colors for player relation</value>
+    <value>Цвета отношения к игроку</value>
   </data>
   <data name="SelectedGuildName" xml:space="preserve">
-    <value>Without Guild</value>
+    <value>Без гильдии</value>
   </data>
   <data name="SetFilterByClass" xml:space="preserve">
-    <value>Settings for filter by class            </value>
+    <value>Настройки фильтра по классам             </value>
   </data>
   <data name="Settings" xml:space="preserve">
-    <value>Settings</value>
+    <value>Настройки</value>
   </data>
   <data name="ShowFPS" xml:space="preserve">
-    <value>Perfomance test</value>
+    <value>Тест производительности</value>
   </data>
   <data name="ShowNicknames" xml:space="preserve">
-    <value>Show nicknames</value>
+    <value>Показывать ники</value>
   </data>
   <data name="ShowOnlyEnemy" xml:space="preserve">
-    <value>Show only enemy players</value>
+    <value>Показывать только врагов</value>
   </data>
   <data name="TopRight" xml:space="preserve">
-    <value>Top right</value>
+    <value>Верхний угол</value>
   </data>
 </root>
