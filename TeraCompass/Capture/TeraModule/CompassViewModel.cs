@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Capture.GUI;
 using Capture.TeraModule.CameraFinder;
-using SharpDX.Direct3D9;
-using TeraCompass.GameModels;
+using Capture.TeraModule.GameModels;
+using Capture.TeraModule.Processing;
 using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game;
-using Point = System.Drawing.Point;
-using Vector = System.Windows.Vector;
 
-namespace TeraCompass.ViewModels
+namespace Capture.TeraModule
 {
     public class CompassViewModel
     {

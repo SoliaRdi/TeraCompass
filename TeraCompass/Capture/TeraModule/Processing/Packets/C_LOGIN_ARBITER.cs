@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using TeraCompass.Processing;
 
-namespace TeraCompass.Processing.Packets
+namespace Capture.TeraModule.Processing.Packets
 {
     class C_LOGIN_ARBITER
     {
-        internal C_LOGIN_ARBITER(Tera.Core.Game.Messages.Client.C_LOGIN_ARBITER message)
+        internal C_LOGIN_ARBITER(TeraCompass.Tera.Core.Game.Messages.Client.C_LOGIN_ARBITER message)
         {
             if (OpcodeDownloader.DownloadSysmsg(PacketProcessor.Instance.MessageFactory.Version, PacketProcessor.Instance.MessageFactory.ReleaseVersion,
                 Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/")))

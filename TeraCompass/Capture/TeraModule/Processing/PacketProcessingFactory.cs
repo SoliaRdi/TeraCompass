@@ -4,13 +4,12 @@ using System.Linq;
 using Capture.TeraModule.Processing.Packets;
 using TeraCompass.Processing.Packets;
 using TeraCompass.Tera.Core.Game.Messages;
-using TeraCompass.Tera.Core.Game.Messages.Client;
 using TeraCompass.Tera.Core.Game.Messages.Server;
 using TeraCompass.Tera.Core.Game.Services;
 using C_CHECK_VERSION = TeraCompass.Tera.Core.Game.Messages.Client.C_CHECK_VERSION;
 using C_LOGIN_ARBITER = TeraCompass.Tera.Core.Game.Messages.Client.C_LOGIN_ARBITER;
 using C_PLAYER_LOCATION = TeraCompass.Tera.Core.Game.Messages.Client.C_PLAYER_LOCATION;
-namespace TeraCompass.Processing
+namespace Capture.TeraModule.Processing
 {
     // Creates a ParsedMessage from a Message
     // Contains a mapping from OpCodeNames to message types and knows how to instantiate those
@@ -20,19 +19,19 @@ namespace TeraCompass.Processing
         public bool Paused = false;
         private static readonly Dictionary<Type, Delegate> MessageToProcessingPaused = new Dictionary<Type, Delegate>
         {
-            {typeof(C_LOGIN_ARBITER), Helpers.Contructor<Func<C_LOGIN_ARBITER, Packets.C_LOGIN_ARBITER>>()},
+            {typeof(C_LOGIN_ARBITER), Helpers.Contructor<Func<C_LOGIN_ARBITER, Capture.TeraModule.Processing.Packets.C_LOGIN_ARBITER>>()},
             {typeof(S_GET_USER_LIST), new Action<S_GET_USER_LIST>(x => PacketProcessor.Instance.UserLogoTracker.SetUserList(x))},
             {typeof(S_GET_USER_GUILD_LOGO), new Action<S_GET_USER_GUILD_LOGO>(x => PacketProcessor.Instance.UserLogoTracker.AddLogo(x))},
-            {typeof(C_CHECK_VERSION), Helpers.Contructor<Func<C_CHECK_VERSION, Packets.C_CHECK_VERSION>>()},
+            {typeof(C_CHECK_VERSION), Helpers.Contructor<Func<C_CHECK_VERSION, Capture.TeraModule.Processing.Packets.C_CHECK_VERSION>>()},
             {typeof(LoginServerMessage), Helpers.Contructor<Func<LoginServerMessage, S_LOGIN>>()}
         };
 
         private static readonly Dictionary<Type, Delegate> MessageToProcessingInit = new Dictionary<Type, Delegate>
         {
-            {typeof(C_LOGIN_ARBITER), Helpers.Contructor<Func<C_LOGIN_ARBITER, Packets.C_LOGIN_ARBITER>>()},
+            {typeof(C_LOGIN_ARBITER), Helpers.Contructor<Func<C_LOGIN_ARBITER, Capture.TeraModule.Processing.Packets.C_LOGIN_ARBITER>>()},
             {typeof(S_GET_USER_LIST), new Action<S_GET_USER_LIST>(x => PacketProcessor.Instance.UserLogoTracker.SetUserList(x))},
             {typeof(S_GET_USER_GUILD_LOGO), new Action<S_GET_USER_GUILD_LOGO>(x => PacketProcessor.Instance.UserLogoTracker.AddLogo(x))},
-            {typeof(C_CHECK_VERSION), Helpers.Contructor<Func<C_CHECK_VERSION, Packets.C_CHECK_VERSION>>()},
+            {typeof(C_CHECK_VERSION), Helpers.Contructor<Func<C_CHECK_VERSION, Capture.TeraModule.Processing.Packets.C_CHECK_VERSION>>()},
             {typeof(LoginServerMessage), Helpers.Contructor<Func<LoginServerMessage, S_LOGIN>>()}
         };
 
@@ -56,7 +55,6 @@ namespace TeraCompass.Processing
             MessageToProcessingInit.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
             MessageToProcessing.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
             UpdateEntityTracker();
-            UpdatePlayerTracker();
             Paused = false;
         }
 
@@ -64,7 +62,6 @@ namespace TeraCompass.Processing
         {
             MainProcessor.Clear();
             MessageToProcessingPaused.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
-            UpdatePlayerTracker();
             Paused = true;
         }
 
@@ -82,19 +79,6 @@ namespace TeraCompass.Processing
             {typeof(S_CHANGE_RELATION), new Action<S_CHANGE_RELATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             };
             entityTrackerProcessing.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
-        }
-
-        public static void UpdatePlayerTracker()
-        {
-            var playerTrackerProcessing = new Dictionary<Type, Delegate>
-            {
-                {typeof(S_PARTY_MEMBER_LIST), new Action<S_PARTY_MEMBER_LIST>(x => PacketProcessor.Instance.PlayerTracker.UpdateParty(x))},
-                {typeof(S_BAN_PARTY_MEMBER), new Action<S_BAN_PARTY_MEMBER>(x => PacketProcessor.Instance.PlayerTracker.UpdateParty(x))},
-                {typeof(S_LEAVE_PARTY_MEMBER), new Action<S_LEAVE_PARTY_MEMBER>(x => PacketProcessor.Instance.PlayerTracker.UpdateParty(x))},
-                {typeof(S_LEAVE_PARTY), new Action<S_LEAVE_PARTY>(x => PacketProcessor.Instance.PlayerTracker.UpdateParty(x))},
-                {typeof(S_BAN_PARTY), new Action<S_BAN_PARTY>(x => PacketProcessor.Instance.PlayerTracker.UpdateParty(x))}
-            };
-            playerTrackerProcessing.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
         }
 
 

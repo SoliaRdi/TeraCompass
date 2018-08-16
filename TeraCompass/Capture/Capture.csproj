@@ -240,7 +240,6 @@
     <Compile Include="TeraModule\Tera.Core\Game\Services\MessageFactory.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\NpcDatabase.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\OpCodeNamer.cs" />
-    <Compile Include="TeraModule\Tera.Core\Game\Services\PlayerTracker.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\ServerDatabase.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\SkillDatabase.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\TeraMessageReader.cs" />
@@ -281,14 +280,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="sharpdx_direct3d11_1_effects_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="sharpdx_direct3d11_1_effects_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="EasyHook">

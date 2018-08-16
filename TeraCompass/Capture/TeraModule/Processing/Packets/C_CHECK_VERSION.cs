@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.IO;
-using System.Windows;
+using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game.Services;
 
-namespace TeraCompass.Processing.Packets
+namespace Capture.TeraModule.Processing.Packets
 {
     internal class C_CHECK_VERSION
     {
-        internal C_CHECK_VERSION(Tera.Core.Game.Messages.Client.C_CHECK_VERSION message)
+        internal C_CHECK_VERSION(TeraCompass.Tera.Core.Game.Messages.Client.C_CHECK_VERSION message)
         {
             if (!Directory.Exists(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/")))
                 Directory.CreateDirectory(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/"));

@@ -1,11 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Text;
+using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game.Messages.Server;
 using TeraCompass.Tera.Core.Game.Services;
-using TeraCompass.ViewModels;
 
-namespace TeraCompass.Processing.Packets
+namespace Capture.TeraModule.Processing.Packets
 {
     internal class S_LOGIN
     {
@@ -34,8 +32,7 @@ namespace TeraCompass.Processing.Packets
                 }
                 if (trackerreset)
                 {
-                    PacketProcessor.Instance.EntityTracker = new EntityTracker(BasicTeraData.Instance.MonsterDatabase);
-                    PacketProcessor.Instance.PlayerTracker = new PlayerTracker(PacketProcessor.Instance.EntityTracker, BasicTeraData.Instance.Servers);
+                    PacketProcessor.Instance.EntityTracker = new EntityTracker();
                 }
                 PacketProcessor.Instance.NeedInit = false;
             }

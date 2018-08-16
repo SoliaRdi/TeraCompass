@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
-using System.Windows;
+using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game;
 using TeraCompass.Tera.Core.Game.Messages;
 using TeraCompass.Tera.Core.Game.Services;
-using TeraCompass.ViewModels;
 using Message = TeraCompass.Tera.Core.Message;
 
-namespace TeraCompass.Processing
+namespace Capture.TeraModule.Processing
 {
-    public class PacketProcessor
+    public sealed class PacketProcessor
     {
         public delegate void ConnectedHandler(string serverName);
 
@@ -45,7 +42,6 @@ namespace TeraCompass.Processing
             packetAnalysis.Start();
             TeraSniffer.Instance.EnableMessageStorage = true;
         }
-        public PlayerTracker PlayerTracker { get; internal set; }
 
         public bool TimedEncounter { get; set; }
 
@@ -74,14 +70,14 @@ namespace TeraCompass.Processing
         public event ConnectedHandler Connected;
 
 
-        protected virtual void HandleEndConnection()
+        private void HandleEndConnection()
         {
             NeedInit = true;
             MessageFactory = new MessageFactory();
             Debug.WriteLine("ConnectionEnded");
         }
 
-        protected virtual void HandleNewConnection(Server server)
+        private void HandleNewConnection(Server server)
         {
             Server = server;
             NeedInit = true;

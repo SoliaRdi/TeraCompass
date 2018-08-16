@@ -17,11 +17,10 @@ namespace TeraCompass.Tera.Core.Game.Services
     public class EntityTracker : IEnumerable<IEntity>
     {
         private readonly Dictionary<EntityId, IEntity> _entities = new Dictionary<EntityId, IEntity>();
-        private readonly NpcDatabase _npcDatabase;
 
-        public EntityTracker(NpcDatabase npcDatabase)
+
+        public EntityTracker()
         {
-            _npcDatabase = npcDatabase;
         }
 
         public UserEntity CompassUser { get; private set; }
