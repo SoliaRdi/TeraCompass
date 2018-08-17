@@ -63,7 +63,7 @@ namespace Capture.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Custom position.
         /// </summary>
-        internal static string CustomPosition {
+        internal static string _1 {
             get {
                 return ResourceManager.GetString("CustomPosition", resourceCulture);
             }

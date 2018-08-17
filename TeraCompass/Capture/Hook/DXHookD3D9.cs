@@ -9,7 +9,6 @@ using ImGuiNET;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Capture.Properties;
 using Capture.TeraModule;
 using Capture.TeraModule.CameraFinder;
 using Capture.TeraModule.Processing;
@@ -299,31 +298,22 @@ namespace Capture.Hook
                         if (ImGui.BeginWindow("Overlay", ref UIState.OverlayOpened, window_size, 0.3f, (UIState.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoFocusOnAppearing))
                         {
                             window_pos = ImGui.GetWindowPosition();
-                            window_size = ImGui.GetWindowSize();
                             if (ImGuiNative.igBeginPopupContextWindow("Options", 1, true))
                             {
-                                if (ImGui.MenuItem(Resources.CustomPosition, null, UIState.OverlayCorner == -1, true)) UIState.OverlayCorner = -1;
-                                if (ImGui.MenuItem(Resources.TopRight, null, UIState.OverlayCorner == 0, true)) UIState.OverlayCorner = 0;
-                                if (ImGui.MenuItem(Resources.Settings, null, UIState.SettingsOpened, true)) UIState.SettingsOpened = !UIState.SettingsOpened;
+                                if (ImGui.MenuItem("Custom position", null, UIState.OverlayCorner == -1, true)) UIState.OverlayCorner = -1;
+                                if (ImGui.MenuItem("Top right", null, UIState.OverlayCorner == 0, true)) UIState.OverlayCorner = 0;
+                                if (ImGui.MenuItem("Settings", null, UIState.SettingsOpened, true)) UIState.SettingsOpened = !UIState.SettingsOpened;
                                 
                                 ImGuiNative.igEndPopup();
                             }
-                            draw_list.AddLine(new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y), new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y + window_size.Y), (uint) Color.FromArgb(90, 70, 70, 255).ToDx9ARGB(), 1f);
-                            draw_list.AddLine(new Vector2(window_pos.X, window_pos.Y + window_size.Y * 0.5f), new Vector2(window_pos.X + window_size.X, window_pos.Y + window_size.Y * 0.5f), (uint) Color.FromArgb(90, 70, 70, 255).ToDx9ARGB(), 1f);
+                            draw_list.AddLine(new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y), new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y + window_size.Y),Color.FromArgb(90, 70, 70, 255).ToDx9ARGB(), 1f);
+                            draw_list.AddLine(new Vector2(window_pos.X, window_pos.Y + window_size.Y * 0.5f), new Vector2(window_pos.X + window_size.X, window_pos.Y + window_size.Y * 0.5f),Color.FromArgb(90, 70, 70, 255).ToDx9ARGB(), 1f);
                             
                             if (PacketProcessor.Instance?.CompassViewModel != null)
                             {
                                 Vector2 dot1 = new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y + window_size.Y * 0.5f);
                                 Vector2 dot2 = new Vector2(window_pos.X + window_size.X - 30, (window_pos.Y + window_size.Y * 0.5f));
-                                Vector2 final;
-                                if (PacketProcessor.Instance.CompassViewModel.CameraScanner.CameraAddress != 0)
-                                {
-                                    final = CompassViewModel.RotatePoint(dot2, dot1, new Angle(PacketProcessor.Instance.CompassViewModel.CameraScanner.Angle()).Gradus - 90);
-                                }
-                                else
-                                {
-                                    final = CompassViewModel.RotatePoint(dot2, dot1, PacketProcessor.Instance.EntityTracker.CompassUser.Heading.Gradus - 90);
-                                }
+                                var final = PacketProcessor.Instance.CompassViewModel.CameraScanner.CameraAddress != 0 ? CompassViewModel.RotatePoint(dot2, dot1, new Angle(PacketProcessor.Instance.CompassViewModel.CameraScanner.Angle()).Gradus - 90) : CompassViewModel.RotatePoint(dot2, dot1, PacketProcessor.Instance.EntityTracker.CompassUser.Heading.Gradus - 90);
                                 draw_list.AddLine(dot1, final, (uint) Color.FromArgb(120, 255, 255, 255).ToDx9ARGB(), 1f);
                                 var values = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values.ToArray();
                                 foreach (var i in values)
@@ -346,7 +336,7 @@ namespace Capture.Hook
                             {
                                 var GuldList = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values
                                     .ToArray()
-                                    .GroupBy(x => x.GuildName.Length == 0 ? Resources.SelectedGuildName : x.GuildName, (key, g) => new {GuildName = key, Players = g.ToList()})
+                                    .GroupBy(x => x.GuildName.Length == 0 ? "Without Guild" : x.GuildName, (key, g) => new {GuildName = key, Players = g.ToList()})
                                     .OrderByDescending(x => x.Players.Count).ToHashSet();
                                 if (GuldList.Count>0)
                                 {
@@ -368,7 +358,7 @@ namespace Capture.Hook
                                         ImGuiNative.igBeginGroup();
                                         ImGui.BeginChild("item view", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true); // Leave room for 1 line below us
 
-                                        ImGui.TextUnformatted(($"{Resources.GuildName} {UIState.SelectedGuildName}\n"));
+                                        ImGui.TextUnformatted(($"Guild name {UIState.SelectedGuildName}\n"));
                                         ImGui.Columns(3, null, true);
 
                                         var players = GuldList.SingleOrDefault(x => x.GuildName == UIState.SelectedGuildName)?.Players?.GroupBy(x => x.PlayerClass, (key, g) => new {Class = key, Players = g.ToList()});
@@ -402,18 +392,18 @@ namespace Capture.Hook
                         {
                             if (ImGui.BeginWindow("Settings", ref UIState.SettingsOpened, new Vector2(350, 400), 0.3f, WindowFlags.NoFocusOnAppearing|WindowFlags.AlwaysAutoResize))
                             {
-                                ImGui.Checkbox(Resources.GuildStat, ref UIState.StatisticsOpened);
-                                ImGui.Checkbox(Resources.ShowOnlyEnemy, ref UIState.CaptureOnlyEnemy);
-                                ImGui.Checkbox(Resources.FilterByClasses, ref UIState.FilterByClassess);
-                                ImGui.Checkbox(Resources.ShowNicknames, ref UIState.ShowNicknames);
-                                ImGui.Checkbox(Resources.ShowFPS, ref UIState.ShowFPS);
+                                ImGui.Checkbox("Guild statistic", ref UIState.StatisticsOpened);
+                                ImGui.Checkbox("Show only enemy players", ref UIState.CaptureOnlyEnemy);
+                                ImGui.Checkbox("Filter by classes", ref UIState.FilterByClassess);
+                                ImGui.Checkbox("Show nicknames", ref UIState.ShowNicknames);
+                                ImGui.Checkbox("Perfomance test", ref UIState.ShowFPS);
                                 ImGui.SliderFloat("Zoom", ref UIState.Zoom, 1, 20,$"Zoom={UIState.Zoom}",2f);
                                 if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
                                     ImGui.SetTooltip($"{UIState.Zoom:F2}");
                                 ImGui.SliderInt("PlayerSize", ref UIState.PlayerSize, 1, 10, $"PlayerSize = {UIState.PlayerSize}");
                                 if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
                                     ImGui.SetTooltip($"{UIState.PlayerSize}");
-                                if (ImGui.CollapsingHeader(Resources.SetFilterByClass, TreeNodeFlags.CollapsingHeader|TreeNodeFlags.AllowItemOverlap))
+                                if (ImGui.CollapsingHeader("Settings for filter by class            ", TreeNodeFlags.CollapsingHeader|TreeNodeFlags.AllowItemOverlap))
                                 {
                                     ImGui.TextUnformatted("Common ignored");
                                     ImGui.Columns(3, null, false);
@@ -431,7 +421,7 @@ namespace Capture.Hook
                                     ImGui.Columns(1,null,false);
                                 }
                                 
-                                if (ImGui.CollapsingHeader(Resources.RelationColors, TreeNodeFlags.CollapsingHeader))
+                                if (ImGui.CollapsingHeader("Colors for player relation", TreeNodeFlags.CollapsingHeader))
                                 {
                                     var keys = UIState.RelationColors.Keys.ToArray();
                                     for (int i = 0; i < keys.Length; i++)

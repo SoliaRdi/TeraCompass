@@ -8,6 +8,8 @@ namespace Capture.TeraModule.Processing.Packets
     {
         internal C_LOGIN_ARBITER(TeraCompass.Tera.Core.Game.Messages.Client.C_LOGIN_ARBITER message)
         {
+            if (!Directory.Exists(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/")))
+                Directory.CreateDirectory(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/"));
             if (OpcodeDownloader.DownloadSysmsg(PacketProcessor.Instance.MessageFactory.Version, PacketProcessor.Instance.MessageFactory.ReleaseVersion,
                 Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/")))
             {

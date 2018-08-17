@@ -73,7 +73,10 @@ namespace TeraCompass.ViewModels
                     TargetFramesPerSecond = 6
                 };
 
-
+                if (!Directory.Exists(Path.Combine(process.MainModule.FileName, "resources", "data")))
+                    Directory.CreateDirectory(Path.Combine(process.MainModule.FileName, "resources", "data"));
+                if (!File.Exists(Path.Combine(process.MainModule.FileName, "resources", "data", "servers.txt")))
+                    File.Copy("servers.txt", Path.Combine(process.MainModule.FileName, "resources", "data", "servers.txt"));
                 var captureInterface = new CaptureInterface();
                 captureInterface.RemoteMessage += e => { LogEvent(e.Message);};
                 _captureProcess = new CaptureProcess(process, cc, captureInterface);
