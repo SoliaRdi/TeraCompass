@@ -19,8 +19,20 @@ namespace TeraCompass.ViewModels
 {
     public class MainViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<string>
     {
+        public bool WaitSplash
+        {
+            get => _waitSplash;
+            set
+            {
+                _waitSplash = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
         private string _logData;
         private CaptureProcess _captureProcess;
+        private bool _waitSplash =true;
+
         #region public members
         public string LogData
         {
@@ -44,11 +56,12 @@ namespace TeraCompass.ViewModels
                     process.WaitForInputIdle();
                     var check = process.MainWindowHandle;
                     LogEvent(process.MainWindowHandle.ToString());
-                    while (check == process.MainWindowHandle)
-                    {
-                        process = Process.GetProcessesByName(exeName).FirstOrDefault();
-                        Thread.Sleep(500);
-                    }
+                    if(WaitSplash)
+                        while (check == process.MainWindowHandle)
+                        {
+                            process = Process.GetProcessesByName(exeName).FirstOrDefault();
+                            Thread.Sleep(500);
+                        }
                 }
                 if (process.MainWindowHandle == IntPtr.Zero)
                 {
@@ -72,11 +85,11 @@ namespace TeraCompass.ViewModels
                     ShowOverlay = false,
                     TargetFramesPerSecond = 6
                 };
-
-                if (!Directory.Exists(Path.Combine(process.MainModule.FileName, "resources", "data")))
-                    Directory.CreateDirectory(Path.Combine(process.MainModule.FileName, "resources", "data"));
-                if (!File.Exists(Path.Combine(process.MainModule.FileName, "resources", "data", "servers.txt")))
-                    File.Copy("servers.txt", Path.Combine(process.MainModule.FileName, "resources", "data", "servers.txt"));
+                var path = Path.Combine(Path.GetDirectoryName(process.MainModule.FileName), "resources", "data");
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                if (!File.Exists(Path.Combine(path, "servers.txt")))
+                    File.Copy("servers.txt", Path.Combine(path, "servers.txt"));
                 var captureInterface = new CaptureInterface();
                 captureInterface.RemoteMessage += e => { LogEvent(e.Message);};
                 _captureProcess = new CaptureProcess(process, cc, captureInterface);

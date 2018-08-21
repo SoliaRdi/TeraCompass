@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Capture.TeraModule;
 using Capture.TeraModule.CameraFinder;
+using Capture.TeraModule.GameModels;
 using Capture.TeraModule.Processing;
 using SharpDX;
 using TeraCompass.Processing;
@@ -315,17 +316,18 @@ namespace Capture.Hook
                                 Vector2 dot2 = new Vector2(window_pos.X + window_size.X - 30, (window_pos.Y + window_size.Y * 0.5f));
                                 var final = PacketProcessor.Instance.CompassViewModel.CameraScanner.CameraAddress != 0 ? CompassViewModel.RotatePoint(dot2, dot1, new Angle(PacketProcessor.Instance.CompassViewModel.CameraScanner.Angle()).Gradus - 90) : CompassViewModel.RotatePoint(dot2, dot1, PacketProcessor.Instance.EntityTracker.CompassUser.Heading.Gradus - 90);
                                 draw_list.AddLine(dot1, final, (uint) Color.FromArgb(120, 255, 255, 255).ToDx9ARGB(), 1f);
-                                var values = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values.ToArray();
-                                foreach (var i in values)
+                                
+                                PlayerModel[] values = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values.ToArray();
+                                for (var i=0;i<values.Length;i++)
                                 {
-                                    if (UIState.CaptureOnlyEnemy && UIState.FriendlyTypes.Contains(i.Relation)) continue;
-                                    if(UIState.FilterByClassess&& UIState.FilteredClasses.Contains(i.PlayerClass)) continue;
-                                    if (!UIState.RelationColors.TryGetValue(i.Relation, out var color))
+                                    if (UIState.CaptureOnlyEnemy && UIState.FriendlyTypes.Contains(values[i].Relation)) continue;
+                                    if(UIState.FilterByClassess&& UIState.FilteredClasses.Contains(values[i].PlayerClass)) continue;
+                                    if (!UIState.RelationColors.TryGetValue(values[i].Relation, out var color))
                                         UIState.RelationColors.TryGetValue(RelationType.Unknown, out color);
-                                    var ScreenPosition = PacketProcessor.Instance.CompassViewModel.GetScreenPos(i);
+                                    var ScreenPosition = PacketProcessor.Instance.CompassViewModel.GetScreenPos(values[i]);
                                     draw_list.AddCircleFilled(new Vector2(window_pos.X + ScreenPosition.X, window_pos.Y + ScreenPosition.Y), UIState.PlayerSize, color.ToDx9ARGB(), UIState.PlayerSize*2);
                                     if (UIState.ShowNicknames)
-                                        draw_list.AddText(new Vector2(window_pos.X + ScreenPosition.X - (i.Name.Length*4/2), window_pos.Y + ScreenPosition.Y+ UIState.PlayerSize), i.Name, color.ToDx9ARGB());
+                                        draw_list.AddText(new Vector2(window_pos.X + ScreenPosition.X - (values[i].Name.Length*4/2), window_pos.Y + ScreenPosition.Y+ UIState.PlayerSize), values[i].Name, color.ToDx9ARGB());
                                 }
                             }
                         }

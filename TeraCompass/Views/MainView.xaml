@@ -13,7 +13,18 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <ScrollViewer>
-            <TextBox HorizontalScrollBarVisibility="Visible" IsReadOnly="True" Grid.Column="0" Text="{Binding LogData}" TextWrapping="Wrap" TextChanged="TextBox_TextChanged"></TextBox>
-        </ScrollViewer>
+            <Grid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.05*"/>
+                        <RowDefinition  Height="0.95*"/>
+                    </Grid.RowDefinitions>
+                    <CheckBox IsChecked="{Binding WaitSplash}" Grid.Row="0">Wait splash screen</CheckBox>
+                    <TextBox Grid.Row="1" HorizontalScrollBarVisibility="Visible" IsReadOnly="True" Grid.Column="0" Text="{Binding LogData}" TextWrapping="Wrap" TextChanged="TextBox_TextChanged"></TextBox>
+
+                </Grid>
+                
+</Grid>
+            </ScrollViewer>
     </Grid>
 </Window>
