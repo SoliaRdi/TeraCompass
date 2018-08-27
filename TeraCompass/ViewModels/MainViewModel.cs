@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -19,6 +20,40 @@ namespace TeraCompass.ViewModels
 {
     public class MainViewModel : Conductor<IScreen>.Collection.AllActive, IHandle<string>
     {
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern int GetWindowTextLength(IntPtr hWnd);
+
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern long GetWindowText(IntPtr hwnd, StringBuilder lpString, long cch);
+
+        [DllImport("User32.dll")]
+        static extern IntPtr GetParent(IntPtr hwnd);
+
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern long GetClassName(IntPtr hwnd, StringBuilder lpClassName, long nMaxCount);
+        string GetClassNameOfWindow(IntPtr hwnd)
+        {
+            string className = "";
+            StringBuilder classText = null;
+            try
+            {
+                int cls_max_length = 1000;
+                classText = new StringBuilder("", cls_max_length + 5);
+                GetClassName(hwnd, classText, cls_max_length + 2);
+
+                if (!String.IsNullOrEmpty(classText.ToString()) && !String.IsNullOrWhiteSpace(classText.ToString()))
+                    className = classText.ToString();
+            }
+            catch (Exception ex)
+            {
+                className = ex.Message;
+            }
+            finally
+            {
+                classText = null;
+            }
+            return className;
+        }
         public bool WaitSplash
         {
             get => _waitSplash;
@@ -54,10 +89,8 @@ namespace TeraCompass.ViewModels
                 if (process.MainWindowHandle == IntPtr.Zero)
                 {
                     process.WaitForInputIdle();
-                    var check = process.MainWindowHandle;
-                    LogEvent(process.MainWindowHandle.ToString());
-                    if(WaitSplash)
-                        while (check == process.MainWindowHandle)
+                    if (WaitSplash)
+                        while (GetClassNameOfWindow(process.MainWindowHandle).Contains("Splash"))
                         {
                             process = Process.GetProcessesByName(exeName).FirstOrDefault();
                             Thread.Sleep(500);
@@ -68,7 +101,7 @@ namespace TeraCompass.ViewModels
                     LogEvent("no MainWindowHandle...");
                     return;
                 }
-
+                LogEvent(GetClassNameOfWindow(process.MainWindowHandle));
                 if (Capture.Hook.HookManager.IsHooked(process.Id))
                 {
                     LogEvent("Game already hooked...");
