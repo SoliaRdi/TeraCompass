@@ -6,7 +6,7 @@ Right now works only for players.
 Like https://github.com/neowutran/ShinraMeter/wiki prerequisite page but with .net framework 4.7.2<br>
 Manually add S_CHANGE_RELATION opcode to \TERA\Binaries\resources\data\opcodes after first run<br>
 15.08 RU: S_CHANGE_RELATION = 30703<br>
-BUG: Not working when S1Engine.ini Fullscreen=True<br>
+BUG: Not working when S1Engine.ini Fullscreen=False<br>
 # How To Use
 1.	Run TeraCompass.exe with admin rights
 2.	Run launcher for TERA with admin rights
