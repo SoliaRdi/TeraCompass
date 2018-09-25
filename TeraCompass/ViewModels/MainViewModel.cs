@@ -29,6 +29,10 @@ namespace TeraCompass.ViewModels
         [DllImport("User32.dll")]
         static extern IntPtr GetParent(IntPtr hwnd);
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool IsHungAppWindow(IntPtr hWnd);
+
         [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern long GetClassName(IntPtr hwnd, StringBuilder lpClassName, long nMaxCount);
         string GetClassNameOfWindow(IntPtr hwnd)
@@ -93,9 +97,10 @@ namespace TeraCompass.ViewModels
                         while (GetClassNameOfWindow(process.MainWindowHandle).Contains("Splash"))
                         {
                             process = Process.GetProcessesByName(exeName).FirstOrDefault();
-                            Thread.Sleep(500);
+                            Thread.Sleep(100);
                         }
                 }
+                
                 if (process.MainWindowHandle == IntPtr.Zero)
                 {
                     LogEvent("no MainWindowHandle...");
@@ -106,6 +111,11 @@ namespace TeraCompass.ViewModels
                 {
                     LogEvent("Game already hooked...");
                     return;
+                }
+                Thread.Sleep(100);
+                while (IsHungAppWindow(process.MainWindowHandle))
+                {
+                    Thread.Sleep(100);
                 }
 
 

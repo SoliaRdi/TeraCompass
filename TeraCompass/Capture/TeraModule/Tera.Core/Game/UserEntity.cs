@@ -37,7 +37,6 @@ namespace TeraCompass.Tera.Core.Game
             ServerId = message.ServerId;
             Level = message.Level;
         }
-        public RelationType Relation { get; set; }
         public string Name { get; set; }
         public string GuildName { get; set; }
         public RaceGenderClass RaceGenderClass { get; set; }
