@@ -13,6 +13,7 @@ using Capture.TeraModule;
 using Capture.TeraModule.CameraFinder;
 using Capture.TeraModule.GameModels;
 using Capture.TeraModule.Processing;
+using Capture.TeraModule.ViewModels;
 using SharpDX;
 using TeraCompass.Processing;
 using Vector2 = System.Numerics.Vector2;
@@ -34,7 +35,8 @@ namespace Capture.Hook
         Hook<Direct3D9Device_PresentDelegate> Direct3DDevice_PresentHook = null;
         Hook<Direct3D9DeviceEx_PresentExDelegate> Direct3DDeviceEx_PresentExHook = null;
         object _lockRenderTarget = new object();
-
+        Stopwatch PerfomanseTester = new Stopwatch();
+        private TimeSpan Elapsed = TimeSpan.Zero;
 
         Query _query;
         SharpDX.Direct3D9.Font _font;
@@ -43,7 +45,7 @@ namespace Capture.Hook
         Surface _resolvedTarget;
 
         public ImGuiRender imGuiRender;
-        Stopwatch PerfomanseTester = new Stopwatch();
+        
         protected override string HookName => "DXHookD3D9";
 
         List<IntPtr> id3dDeviceFunctionAddresses = new List<IntPtr>();
@@ -58,8 +60,6 @@ namespace Capture.Hook
             this.DebugMessage("Hook: Begin");
             // First we need to determine the function address for IDirect3DDevice9
             id3dDeviceFunctionAddresses = new List<IntPtr>();
-            //id3dDeviceExFunctionAddresses = new List<IntPtr>();
-            this.DebugMessage("Hook: Before device creation");
             using (Direct3D d3d = new Direct3D())
             {
                 using (var renderForm = new System.Windows.Forms.Form())
@@ -67,7 +67,6 @@ namespace Capture.Hook
                     Device device;
                     using (device = new Device(d3d, 0, DeviceType.NullReference, IntPtr.Zero, CreateFlags.HardwareVertexProcessing, new PresentParameters() {BackBufferWidth = 1, BackBufferHeight = 1, DeviceWindowHandle = renderForm.Handle}))
                     {
-                        this.DebugMessage("Hook: Device created");
                         id3dDeviceFunctionAddresses.AddRange(GetVTblAddresses(device.NativePointer, D3D9_DEVICE_METHOD_COUNT));
                     }
                 }
@@ -77,12 +76,10 @@ namespace Capture.Hook
             {
                 using (Direct3DEx d3dEx = new Direct3DEx())
                 {
-                    this.DebugMessage("Hook: Direct3DEx...");
                     using (var renderForm = new System.Windows.Forms.Form())
                     {
                         using (var deviceEx = new DeviceEx(d3dEx, 0, DeviceType.NullReference, IntPtr.Zero, CreateFlags.HardwareVertexProcessing, new PresentParameters() {BackBufferWidth = 1, BackBufferHeight = 1, DeviceWindowHandle = renderForm.Handle}, new DisplayModeEx() {Width = 800, Height = 600}))
                         {
-                            this.DebugMessage("Hook: DeviceEx created - PresentEx supported");
                             id3dDeviceFunctionAddresses.AddRange(GetVTblAddresses(deviceEx.NativePointer, D3D9_DEVICE_METHOD_COUNT, D3D9Ex_DEVICE_METHOD_COUNT));
                             _supportsDirect3D9Ex = true;
                         }
@@ -154,7 +151,7 @@ namespace Capture.Hook
 
             TeraSniffer.Instance.Enabled = true;
             TeraSniffer.Instance.Warning += DebugMessage;
-            PacketProcessor.Instance.Connected += s => { Debug.Write("The connection is established"); };
+            PacketProcessor.Instance.Connected += s => { Debug.Write("Connected"); };
         }
 
         /// <summary>
@@ -260,7 +257,7 @@ namespace Capture.Hook
         }
 
 
-        private TimeSpan Elapsed = TimeSpan.Zero;
+        
         /// <summary>
         /// Implementation of capturing from the render target of the Direct3D9 Device (or DeviceEx)
         /// </summary>
@@ -287,175 +284,25 @@ namespace Capture.Hook
                             PerfomanseTester.Reset();
                             PerfomanseTester.Start();
                         }
-
                         imGuiRender.GetNewFrame();
-                        Vector2 window_pos = new Vector2((UIState.OverlayCorner == 1) ? ImGui.GetIO().DisplaySize.X - UIState.DISTANCE : UIState.DISTANCE, (UIState.OverlayCorner == 2) ? ImGui.GetIO().DisplaySize.Y - UIState.DISTANCE * 4 : UIState.DISTANCE * 4);
-                        Vector2 window_pos_pivot = new Vector2((UIState.OverlayCorner == 1) ? 1.0f : 0.0f, (UIState.OverlayCorner == 2) ? 1.0f : 0.0f);
-                        Vector2 window_size = new Vector2(300, 300);
-                        var draw_list = ImGui.GetOverlayDrawList();
-                        if (UIState.OverlayCorner != -1)
-                            ImGui.SetNextWindowPos(window_pos, Condition.Always, window_pos_pivot);
-                        
-                        if (ImGui.BeginWindow("Overlay", ref UIState.OverlayOpened, window_size, 0.3f, (UIState.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoFocusOnAppearing))
-                        {
-                            window_pos = ImGui.GetWindowPosition();
-                            if (ImGuiNative.igBeginPopupContextWindow("Options", 1, true))
-                            {
-                                if (ImGui.MenuItem("Custom position", null, UIState.OverlayCorner == -1, true)) UIState.OverlayCorner = -1;
-                                if (ImGui.MenuItem("Top right", null, UIState.OverlayCorner == 0, true)) UIState.OverlayCorner = 0;
-                                if (ImGui.MenuItem("Settings", null, UIState.SettingsOpened, true)) UIState.SettingsOpened = !UIState.SettingsOpened;
-                                
-                                ImGuiNative.igEndPopup();
-                            }
-                            draw_list.AddLine(new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y), new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y + window_size.Y),Color.FromArgb(90, 70, 70, 255).ToDx9ARGB(), 1f);
-                            draw_list.AddLine(new Vector2(window_pos.X, window_pos.Y + window_size.Y * 0.5f), new Vector2(window_pos.X + window_size.X, window_pos.Y + window_size.Y * 0.5f),Color.FromArgb(90, 70, 70, 255).ToDx9ARGB(), 1f);
-                            
-                            if (PacketProcessor.Instance?.CompassViewModel != null)
-                            {
-                                Vector2 dot1 = new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y + window_size.Y * 0.5f);
-                                Vector2 dot2 = new Vector2(window_pos.X + window_size.X - 30, (window_pos.Y + window_size.Y * 0.5f));
-                                var final = PacketProcessor.Instance.CompassViewModel.CameraScanner.CameraAddress != 0 ? CompassViewModel.RotatePoint(dot2, dot1, new Angle(PacketProcessor.Instance.CompassViewModel.CameraScanner.Angle()).Gradus - 90) : CompassViewModel.RotatePoint(dot2, dot1, PacketProcessor.Instance.EntityTracker.CompassUser.Heading.Gradus - 90);
-                                draw_list.AddLine(dot1, final, (uint) Color.FromArgb(120, 255, 255, 255).ToDx9ARGB(), 1f);
-                                
-                                PlayerModel[] values = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values.ToArray();
-                                for (var i=0;i<values.Length;i++)
-                                {
-                                    if (UIState.CaptureOnlyEnemy && UIState.FriendlyTypes.Contains(values[i].Relation)) continue;
-                                    if(UIState.FilterByClassess&& UIState.FilteredClasses.Contains(values[i].PlayerClass)) continue;
-                                    if (!UIState.RelationColors.TryGetValue(values[i].Relation, out var color))
-                                        UIState.RelationColors.TryGetValue(RelationType.Unknown, out color);
-                                    var ScreenPosition = PacketProcessor.Instance.CompassViewModel.GetScreenPos(values[i]);
-                                    draw_list.AddCircleFilled(new Vector2(window_pos.X + ScreenPosition.X, window_pos.Y + ScreenPosition.Y), UIState.PlayerSize, color.ToDx9ARGB(), UIState.PlayerSize*2);
-                                    if (UIState.ShowNicknames)
-                                        draw_list.AddText(new Vector2(window_pos.X + ScreenPosition.X - (values[i].Name.Length*4/2), window_pos.Y + ScreenPosition.Y+ UIState.PlayerSize), values[i].Name, color.ToDx9ARGB());
-                                }
-                            }
-                        }
-                        ImGui.EndWindow();
-                        if (PacketProcessor.Instance?.CompassViewModel != null && PacketProcessor.Instance.CompassViewModel.PlayerModels.Count > 0)
-                        {
-                            if (UIState.StatisticsOpened)
-                            {
-                                var GuldList = PacketProcessor.Instance.CompassViewModel.PlayerModels.Values
-                                    .ToArray()
-                                    .GroupBy(x => x.GuildName.Length == 0 ? "Without Guild" : x.GuildName, (key, g) => new {GuildName = key, Players = g.ToList()})
-                                    .OrderByDescending(x => x.Players.Count).ToHashSet();
-                                if (GuldList.Count>0)
-                                {
-                                    ImGui.SetNextWindowPos(new Vector2(window_pos.X, window_pos.Y + window_size.Y), Condition.Always, window_pos_pivot);
-                                    if (ImGui.BeginWindow("Guilds", ref UIState.OverlayOpened, new Vector2(350, 200), 0.3f, WindowFlags.NoTitleBar | WindowFlags.NoFocusOnAppearing))
-                                    {
-                                        ImGui.BeginChild("left pane", new Vector2(150, 0), true);
 
-                                        foreach (var i in GuldList)
-                                        {
-                                            if (ImGui.Selectable($"{i.GuildName} ({i.Players.Count})", UIState.SelectedGuildName == i.GuildName))
-                                            {
-                                                UIState.SelectedGuildName = i.GuildName;
-                                            }
-                                        }
+                        var CompassViewModel = PacketProcessor.Instance?.CompassViewModel;
+                        CompassViewModel?.Render();
 
-                                        ImGui.EndChild();
-                                        ImGui.SameLine();
-                                        ImGuiNative.igBeginGroup();
-                                        ImGui.BeginChild("item view", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true); // Leave room for 1 line below us
-
-                                        ImGui.TextUnformatted(($"Guild name {UIState.SelectedGuildName}\n"));
-                                        ImGui.Columns(3, null, true);
-
-                                        var players = GuldList.SingleOrDefault(x => x.GuildName == UIState.SelectedGuildName)?.Players?.GroupBy(x => x.PlayerClass, (key, g) => new {Class = key, Players = g.ToList()});
-                                        if (players != null)
-                                            foreach (var details in players)
-                                            {
-                                                if (ImGui.GetColumnIndex() == 0)
-                                                    ImGui.Separator();
-                                                ImGui.TextUnformatted($"{details.Class.ToString()} ({details.Players.Count})\n");
-
-                                                if (details.Players?.Count > 0)
-                                                {
-                                                    foreach (var name in details.Players)
-                                                    {
-                                                        ImGui.TextUnformatted($"{name.Name}\n");
-                                                    }
-                                                }
-                                                ImGui.NextColumn();
-                                            }
-                                        ImGui.Columns(1, null, true);
-
-                                        ImGui.Separator();
-                                        ImGui.EndChild();
-                                        ImGuiNative.igEndGroup();
-                                    }
-                                    ImGui.EndWindow();
-                                }
-                            }
-                        }
-                        if (UIState.SettingsOpened)
-                        {
-                            if (ImGui.BeginWindow("Settings", ref UIState.SettingsOpened, new Vector2(350, 400), 0.3f, WindowFlags.NoFocusOnAppearing|WindowFlags.AlwaysAutoResize))
-                            {
-                                ImGui.Checkbox("Guild statistic", ref UIState.StatisticsOpened);
-                                ImGui.Checkbox("Show only enemy players", ref UIState.CaptureOnlyEnemy);
-                                ImGui.Checkbox("Filter by classes", ref UIState.FilterByClassess);
-                                ImGui.Checkbox("Show nicknames", ref UIState.ShowNicknames);
-                                ImGui.Checkbox("Perfomance test", ref UIState.ShowFPS);
-                                ImGui.SliderFloat("Zoom", ref UIState.Zoom, 1, 20,$"Zoom={UIState.Zoom}",2f);
-                                if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
-                                    ImGui.SetTooltip($"{UIState.Zoom:F2}");
-                                ImGui.SliderInt("PlayerSize", ref UIState.PlayerSize, 1, 10, $"PlayerSize = {UIState.PlayerSize}");
-                                if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
-                                    ImGui.SetTooltip($"{UIState.PlayerSize}");
-                                if (ImGui.CollapsingHeader("Settings for filter by class            ", TreeNodeFlags.CollapsingHeader|TreeNodeFlags.AllowItemOverlap))
-                                {
-                                    ImGui.TextUnformatted("Common ignored");
-                                    ImGui.Columns(3, null, false);
-                                    foreach (PlayerClass i in Enum.GetValues(typeof(PlayerClass)))
-                                    {
-                                        bool flag = UIState.FilteredClasses.Contains(i);
-                                        ImGui.Checkbox(i.ToString(), ref flag);
-                                        if (flag)
-                                            UIState.FilteredClasses.Add(i);
-                                        else
-                                            if (UIState.FilteredClasses.Contains(i))
-                                            UIState.FilteredClasses.Remove(i);
-                                        ImGui.NextColumn();
-                                    }
-                                    ImGui.Columns(1,null,false);
-                                }
-                                
-                                if (ImGui.CollapsingHeader("Colors for player relation", TreeNodeFlags.CollapsingHeader))
-                                {
-                                    var keys = UIState.RelationColors.Keys.ToArray();
-                                    for (int i = 0; i < keys.Length; i++)
-                                    {
-                                        UIState.RelationColors.TryGetValue(keys[i], out var color);
-                                        UIState.R[i] = ((color >> 16) & 255) / 255f;
-                                        UIState.G[i] = ((color >> 8) & 255) / 255f;
-                                        UIState.B[i] = ((color >> 0) & 255) / 255f;
-                                        UIState.A[i] = ((color >> 24) & 255) / 255f;
-                                        ImGui.TextUnformatted(keys[i].ToString());
-                                        ImGui.SameLine();
-                                        ImGui.ColorEdit4(keys[i].ToString(), ref UIState.R[i], ref UIState.G[i], ref UIState.B[i], ref UIState.A[i], (ColorEditFlags.NoInputs | ColorEditFlags.RGB | ColorEditFlags.NoLabel));
-                                        uint mr = UIState.R[i] >= 1.0 ? 255 : (UIState.R[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.R[i] * 255f)),
-                                            mg = UIState.G[i] >= 1.0 ? 255 : (UIState.G[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.G[i] * 255f)),
-                                            mb = UIState.B[i] >= 1.0 ? 255 : (UIState.B[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.B[i] * 255f)),
-                                            ma = UIState.A[i] >= 1.0 ? 255 : (UIState.A[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.A[i] * 255f));
-                                        UIState.RelationColors[keys[i]] = ((ma << 24) | (mr << 16) | (mg << 8) | (mb << 0));
-                                    }
-                                }
-                            }
-                            ImGui.EndWindow();
-                        }
                         //if (UIState.SettingsOpened)
                         //    ImGuiNative.igShowDemoWindow(ref UIState.OverlayOpened);
-                        if(UIState.ShowFPS)
-                            draw_list.AddText(window_pos, $"PerfomanseTester = {Elapsed}", Color.Red.ToDx9ARGB());
+                        if (UIState.ShowFPS)
+                        {
+                            var draw_list = ImGui.GetOverlayDrawList();
+                            draw_list.AddText(new Vector2(10,10), $"PerfomanseTester = {Elapsed}", Color.Red.ToDx9ARGB());
+                        }
+                            
                         imGuiRender.Draw();
                         if (UIState.ShowFPS && PerfomanseTester.IsRunning)
                         {
                             PerfomanseTester.Stop();
                             Elapsed = PerfomanseTester.Elapsed;
-                        } 
+                        }
                     }
                 }
                 catch (Exception e)

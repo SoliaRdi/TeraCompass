@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
+using Capture.Hook.Input;
 
 namespace Capture
 {
@@ -113,6 +114,12 @@ namespace Capture
         [DllImport("user32.dll")]
         public static extern bool GetWindowRect(IntPtr hwnd, ref Rect rectangle);
 
+        [DllImport("user32.dll")]
+        public static extern int GetRawInputData(IntPtr hRawInput, RawInputCommand uiCommand, out RAWINPUT pData, ref int pcbSize, int cbSizeHeader);
+
+        [DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
+        public static extern IntPtr DefWindowProcW([In] IntPtr hWnd, WindowsMessages uMsg, IntPtr wParam,
+            IntPtr lParam);
         public struct Rect
         {
             public int Left { get; set; }

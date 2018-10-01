@@ -34,9 +34,12 @@ namespace Capture.TeraModule.CameraFinder
 
                         if (match.Success)
                         {
-                            Debug.Write("Camera founded");
                             CameraAddress = region.BaseAddress + (uint) (match.Index + match.Length - 5) / 3;
                             return;
+                        }
+                        else
+                        {
+                            Debug.Write("Camera not founded");
                         }
                     }
                     catch

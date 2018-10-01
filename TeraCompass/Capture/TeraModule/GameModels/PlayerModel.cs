@@ -14,6 +14,7 @@ namespace Capture.TeraModule.GameModels
         public string GuildName { get; set; }
         public Vector2 ScreenPosition { get; set; }
         public PlayerClass PlayerClass { get; set; }
+        public bool Dead { get; set; }
         public PlayerModel(UserEntity obj)
         {
             Relation = obj.Relation;

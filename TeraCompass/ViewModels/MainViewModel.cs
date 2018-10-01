@@ -94,24 +94,27 @@ namespace TeraCompass.ViewModels
                 {
                     process.WaitForInputIdle();
                     if (WaitSplash)
-                        while (GetClassNameOfWindow(process.MainWindowHandle).Contains("Splash"))
+                        while (!GetClassNameOfWindow(process.MainWindowHandle).Contains("Launch"))
                         {
-                            process = Process.GetProcessesByName(exeName).FirstOrDefault();
-                            Thread.Sleep(100);
+                            //process = Process.GetProcessesByName(exeName).FirstOrDefault();
+                            process.Refresh();
+                            Thread.Sleep(50);
                         }
                 }
-                
+                process.Refresh();
+                Thread.Sleep(100);
+                LogEvent(GetClassNameOfWindow(process.MainWindowHandle));
                 if (process.MainWindowHandle == IntPtr.Zero)
                 {
                     LogEvent("no MainWindowHandle...");
                     return;
                 }
-                LogEvent(GetClassNameOfWindow(process.MainWindowHandle));
                 if (Capture.Hook.HookManager.IsHooked(process.Id))
                 {
                     LogEvent("Game already hooked...");
                     return;
                 }
+                
                 Thread.Sleep(100);
                 while (IsHungAppWindow(process.MainWindowHandle))
                 {

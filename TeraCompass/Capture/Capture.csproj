@@ -76,9 +76,7 @@
     <Compile Include="GUI\UIState.cs" />
     <Compile Include="GUI\Vertex\GuiVertex.cs" />
     <Compile Include="Hook\DebugListener.cs" />
-    <Compile Include="Hook\Input\BaseHook.cs" />
     <Compile Include="Hook\Input\Constants.cs" />
-    <Compile Include="Hook\Input\KeyboardHook.cs" />
     <Compile Include="Hook\SafeHGlobal.cs" />
     <Compile Include="Hook\DX9FormatExtension.cs" />
     <Compile Include="Hook\FramesPerSecond.cs" />
@@ -108,7 +106,7 @@
     <Compile Include="SharpDx\IComponent.cs" />
     <Compile Include="TeraModule\CameraFinder\CameraScanner.cs" />
     <Compile Include="TeraModule\CameraFinder\MemoryScanner.cs" />
-    <Compile Include="TeraModule\CompassViewModel.cs" />
+    <Compile Include="TeraModule\ViewModels\CompassViewModel.cs" />
     <Compile Include="TeraModule\GameModels\PlayerModel.cs" />
     <Compile Include="TeraModule\NetworkSniffer\ConnectionId.cs" />
     <Compile Include="TeraModule\NetworkSniffer\EndpointIpv4.cs" />

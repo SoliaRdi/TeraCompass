@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
+using Capture.TeraModule.ViewModels;
 using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game;
 using TeraCompass.Tera.Core.Game.Messages;
@@ -32,7 +33,7 @@ namespace Capture.TeraModule.Processing
         internal PacketProcessingFactory PacketProcessing = new PacketProcessingFactory();
         public Server Server;
         internal UserLogoTracker UserLogoTracker = new UserLogoTracker();
-        Type UnknownType = typeof(UnknownMessage);
+        readonly Type UnknownType = typeof(UnknownMessage);
         private PacketProcessor()
         {
             TeraSniffer.Instance.NewConnection += HandleNewConnection;

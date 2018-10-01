@@ -48,7 +48,7 @@ namespace TeraCompass.Tera.Core.Game
         public long StartTime { get; set; }
         public long EndTime { get; set; }
         public RelationType Relation { get; set; }
-
+        public bool Dead { get; set; }
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;

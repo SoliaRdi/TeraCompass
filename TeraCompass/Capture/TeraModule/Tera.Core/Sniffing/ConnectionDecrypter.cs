@@ -44,8 +44,6 @@ namespace TeraCompass.Tera.Core.Sniffing
             session.ServerKey1 = serverKey1;
             session.ServerKey2 = serverKey2;
             session.Init(_region);
-
-            Debug.WriteLine("Success");
             return session;
         }
 

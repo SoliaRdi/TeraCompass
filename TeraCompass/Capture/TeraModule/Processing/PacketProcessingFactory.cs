@@ -16,16 +16,6 @@ namespace Capture.TeraModule.Processing
     // Since it works with OpCodeNames not numeric OpCodes, it needs an OpCodeNamer
     public class PacketProcessingFactory
     {
-        public bool Paused = false;
-        private static readonly Dictionary<Type, Delegate> MessageToProcessingPaused = new Dictionary<Type, Delegate>
-        {
-            {typeof(C_LOGIN_ARBITER), Helpers.Contructor<Func<C_LOGIN_ARBITER, Capture.TeraModule.Processing.Packets.C_LOGIN_ARBITER>>()},
-            {typeof(S_GET_USER_LIST), new Action<S_GET_USER_LIST>(x => PacketProcessor.Instance.UserLogoTracker.SetUserList(x))},
-            {typeof(S_GET_USER_GUILD_LOGO), new Action<S_GET_USER_GUILD_LOGO>(x => PacketProcessor.Instance.UserLogoTracker.AddLogo(x))},
-            {typeof(C_CHECK_VERSION), Helpers.Contructor<Func<C_CHECK_VERSION, Capture.TeraModule.Processing.Packets.C_CHECK_VERSION>>()},
-            {typeof(LoginServerMessage), Helpers.Contructor<Func<LoginServerMessage, S_LOGIN>>()}
-        };
-
         private static readonly Dictionary<Type, Delegate> MessageToProcessingInit = new Dictionary<Type, Delegate>
         {
             {typeof(C_LOGIN_ARBITER), Helpers.Contructor<Func<C_LOGIN_ARBITER, Capture.TeraModule.Processing.Packets.C_LOGIN_ARBITER>>()},
@@ -35,12 +25,6 @@ namespace Capture.TeraModule.Processing
             {typeof(LoginServerMessage), Helpers.Contructor<Func<LoginServerMessage, S_LOGIN>>()}
         };
 
-        private static readonly Dictionary<Type, Delegate> MessageToProcessing = new Dictionary<Type, Delegate>
-        {
-            //{typeof(SpawnUserServerMessage), Helpers.Contructor<Func<SpawnUserServerMessage, S_SPAWN_USER>>()},
-            //{typeof(SDespawnNpc), Helpers.Contructor<Func<SDespawnNpc, S_DESPAWN_NPC>>()},
-            //{typeof(SUserStatus), new Action<SUserStatus>(S_USER_STATUS.Process)}
-       };
         
         private static readonly Dictionary<Type, Delegate> MainProcessor = new Dictionary<Type, Delegate>();
 
@@ -53,16 +37,7 @@ namespace Capture.TeraModule.Processing
         {
             MainProcessor.Clear();
             MessageToProcessingInit.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
-            MessageToProcessing.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
             UpdateEntityTracker();
-            Paused = false;
-        }
-
-        public void Pause()
-        {
-            MainProcessor.Clear();
-            MessageToProcessingPaused.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
-            Paused = true;
         }
 
         public static void UpdateEntityTracker()
@@ -75,8 +50,9 @@ namespace Capture.TeraModule.Processing
                 { typeof(S_USER_FLYING_LOCATION), new Action<S_USER_FLYING_LOCATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
                 { typeof(SpawnUserServerMessage),  new Action<SpawnUserServerMessage>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
                 { typeof(SDespawnUser),  new Action<SDespawnUser>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
-                {typeof(SpawnMeServerMessage), new Action<SpawnMeServerMessage>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
-            {typeof(S_CHANGE_RELATION), new Action<S_CHANGE_RELATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+                { typeof(SpawnMeServerMessage), new Action<SpawnMeServerMessage>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+                { typeof(S_CHANGE_RELATION), new Action<S_CHANGE_RELATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+                { typeof(SCreatureLife), new Action<SCreatureLife>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             };
             entityTrackerProcessing.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
         }

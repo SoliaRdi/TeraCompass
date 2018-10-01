@@ -14,14 +14,9 @@ using TeraCompass.Tera.Core.Game.Messages.Server;
 namespace TeraCompass.Tera.Core.Game.Services
 {
     // Tracks which entities we have seen so far and what their properties are
-    public class EntityTracker : IEnumerable<IEntity>
+    public sealed class EntityTracker : IEnumerable<IEntity>
     {
         private readonly Dictionary<EntityId, IEntity> _entities = new Dictionary<EntityId, IEntity>();
-
-
-        public EntityTracker()
-        {
-        }
 
         public UserEntity CompassUser { get; private set; }
 
@@ -38,16 +33,18 @@ namespace TeraCompass.Tera.Core.Game.Services
         public event Action<IEntity> EntityUpdated;
         public event Action<IEntity> EntityDeleted;
         public event Action<IEntity> EntitysCleared;
-        protected virtual void OnEntityUpdated(IEntity entity)
+
+        private void OnEntityUpdated(IEntity entity)
         {
             EntityUpdated?.Invoke(entity);
         }
 
-        protected virtual void OnEntityDeleted(Entity entity)
+        private void OnEntityDeleted(Entity entity)
         {
             EntityDeleted?.Invoke(entity);
         }
-        protected virtual void OnEntitysCleared(Entity entity)
+
+        private void OnEntitysCleared(Entity entity)
         {
             EntitysCleared?.Invoke(entity);
         }
@@ -80,52 +77,32 @@ namespace TeraCompass.Tera.Core.Game.Services
             OnEntityUpdated(newEntity);
         }
 
-        public void Update(EachSkillResultServerMessage m)
-        {
-            var entity = GetOrNull(m.Target);
-            if (entity == null) return;
-            if (m.Position.X == 0 && m.Position.Y == 0 && m.Position.Z == 0) return;
-            entity.Position = m.Position;
-            entity.Finish = m.Position;
-            entity.Speed = 0;
-            entity.StartTime = 0;
-            entity.Heading = m.Heading;
-            entity.EndAngle = m.Heading;
-            entity.EndTime = 0;
-        }
-
         public void Update(SCreatureLife m)
         {
             var entity = GetOrNull(m.User);
-            if (entity == null) return;
-            entity.Position = m.Position;
-            entity.Finish = entity.Position;
-            entity.Speed = 0;
-            entity.StartTime = 0;
-            entity.EndAngle = entity.Heading;
-            entity.EndTime = 0;
+            if (entity != null)
+            {
+                entity.Position = m.Position;
+                entity.Dead = m.Dead;
+                OnEntityUpdated(entity);
+            }
+            
         }
 
         public void Update(C_PLAYER_LOCATION m)
         {
             if (CompassUser == null) return; //Don't know how, but sometimes this happens.
             CompassUser.Heading = m.Heading;
-                CompassUser.Position = m.Position;
-               
-                OnEntityUpdated(CompassUser);
+            CompassUser.Position = m.Position;
+            OnEntityUpdated(CompassUser);
         }
 
         public void Update(C_PLAYER_FLYING_LOCATION m)
         {
             if (CompassUser == null) return; //Don't know how, but sometimes this happens.
-            //CompassUser.Heading = m.Heading;
-                CompassUser.Position = m.Position;
-                
-                OnEntityUpdated(CompassUser);
+            CompassUser.Position = m.Position;
+            OnEntityUpdated(CompassUser);
         }
-
-
-      
 
         public void Update(S_USER_LOCATION m)
         {
@@ -161,6 +138,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             message.On<SDespawnUser>(Update);
             message.On<SpawnMeServerMessage>(Update);
             message.On<S_CHANGE_RELATION>(Update);
+            message.On<SCreatureLife>(Update);
         }
 
         private Entity LoginMe(LoginServerMessage m)

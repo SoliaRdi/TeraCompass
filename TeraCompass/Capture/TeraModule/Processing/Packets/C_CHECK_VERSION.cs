@@ -11,7 +11,7 @@ namespace Capture.TeraModule.Processing.Packets
         {
             if (!Directory.Exists(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/")))
                 Directory.CreateDirectory(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/"));
-            Debug.WriteLine("VERSION0 = " + message.Versions[0]);
+            Debug.WriteLine("protocol version = " + message.Versions[0]);
             OpcodeDownloader.DownloadIfNotExist(message.Versions[0], Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/"));
             if (!File.Exists(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/{message.Versions[0]}.txt")) && !File.Exists(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/protocol.{message.Versions[0]}.map")))
             {

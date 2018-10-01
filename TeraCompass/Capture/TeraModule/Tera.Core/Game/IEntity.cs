@@ -8,6 +8,7 @@
         Angle Heading { get; set; }
         EntityId Id { get; }
         RelationType Relation { get; set; }
+        bool Dead { get; set; }
         Angle LastCastAngle { get; set; }
         Vector3f Position { get; set; }
         Entity RootOwner { get; }

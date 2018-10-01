@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Capture.TeraModule.ViewModels;
 using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game.Messages.Server;
 using TeraCompass.Tera.Core.Game.Services;

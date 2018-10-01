@@ -15,7 +15,6 @@ namespace Capture.TeraModule.Processing.Packets
                 PacketProcessor.Instance.MessageFactory.ReloadSysMsg();
             };
             BasicTeraData.Instance.Servers.Language = message.Language;
-            Debug.Write("ARBITER message");
         }
     }
 }
