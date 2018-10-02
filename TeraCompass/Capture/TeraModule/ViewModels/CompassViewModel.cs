@@ -9,6 +9,7 @@ using Capture.GUI;
 using Capture.TeraModule.CameraFinder;
 using Capture.TeraModule.GameModels;
 using Capture.TeraModule.Processing;
+using Capture.TeraModule.Settings;
 using ImGuiNET;
 using TeraCompass.Tera.Core;
 using TeraCompass.Tera.Core.Game;
@@ -91,8 +92,8 @@ namespace Capture.TeraModule.ViewModels
             var radarCenter = new Vector2(150f, 150f);
             var screenPos = Vector3ToVector2(entity.Position);
             screenPos = myPos - screenPos;
-            var distance = screenPos.Length() * (0.02f * UIState.Zoom);
-            distance = Math.Min(distance, 150f - UIState.PlayerSize);
+            var distance = screenPos.Length() * (0.02f * Services.CompassSettings.Zoom);
+            distance = Math.Min(distance, 150f - Services.CompassSettings.PlayerSize);
             screenPos = Vector2.Normalize(screenPos);
             screenPos *= distance;
             screenPos += radarCenter;
@@ -104,27 +105,27 @@ namespace Capture.TeraModule.ViewModels
         {
             var window_pos =
                 new Vector2(
-                    UIState.OverlayCorner == 1 ? ImGui.GetIO().DisplaySize.X - UIState.DISTANCE : UIState.DISTANCE,
-                    UIState.OverlayCorner == 2
-                        ? ImGui.GetIO().DisplaySize.Y - UIState.DISTANCE * 4
-                        : UIState.DISTANCE * 4);
+                    Services.CompassSettings.OverlayCorner == 1 ? ImGui.GetIO().DisplaySize.X - Services.CompassSettings.DISTANCE : Services.CompassSettings.DISTANCE,
+                    Services.CompassSettings.OverlayCorner == 2
+                        ? ImGui.GetIO().DisplaySize.Y - Services.CompassSettings.DISTANCE * 4
+                        : Services.CompassSettings.DISTANCE * 4);
 
-            var window_pos_pivot = new Vector2(UIState.OverlayCorner == 1 ? 1.0f : 0.0f, UIState.OverlayCorner == 2 ? 1.0f : 0.0f);
+            var window_pos_pivot = new Vector2(Services.CompassSettings.OverlayCorner == 1 ? 1.0f : 0.0f, Services.CompassSettings.OverlayCorner == 2 ? 1.0f : 0.0f);
             var window_size = new Vector2(300, 300);
             var draw_list = ImGui.GetOverlayDrawList();
-            if (UIState.OverlayCorner != -1)
+            if (Services.CompassSettings.OverlayCorner != -1)
                 ImGui.SetNextWindowPos(window_pos, Condition.Always, window_pos_pivot);
 
-            if (ImGui.BeginWindow("Overlay", ref UIState.OverlayOpened, window_size, 0.3f,(UIState.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoFocusOnAppearing))
+            if (ImGui.BeginWindow("Overlay", ref Services.CompassSettings.OverlayOpened, window_size, 0.3f,(Services.CompassSettings.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoFocusOnAppearing))
             {
                 window_pos = ImGui.GetWindowPosition();
                 if (ImGuiNative.igBeginPopupContextWindow("Options", 1, true))
                 {
-                    if (ImGui.MenuItem("Custom position", null, UIState.OverlayCorner == -1, true))
-                        UIState.OverlayCorner = -1;
-                    if (ImGui.MenuItem("Top right", null, UIState.OverlayCorner == 0, true)) UIState.OverlayCorner = 0;
-                    if (ImGui.MenuItem("Settings", null, UIState.SettingsOpened, true))
-                        UIState.SettingsOpened = !UIState.SettingsOpened;
+                    if (ImGui.MenuItem("Custom position", null, Services.CompassSettings.OverlayCorner == -1, true))
+                        Services.CompassSettings.OverlayCorner = -1;
+                    if (ImGui.MenuItem("Top right", null, Services.CompassSettings.OverlayCorner == 0, true)) Services.CompassSettings.OverlayCorner = 0;
+                    if (ImGui.MenuItem("Settings", null, Services.CompassSettings.SettingsOpened, true))
+                        Services.CompassSettings.SettingsOpened = !Services.CompassSettings.SettingsOpened;
 
                     ImGuiNative.igEndPopup();
                 }
@@ -151,30 +152,30 @@ namespace Capture.TeraModule.ViewModels
                 var values = PlayerModels.Values.ToArray();
                 for (var i = 0; i < values.Length; i++)
                 {
-                    if (UIState.CaptureOnlyEnemy && UIState.FriendlyTypes.Contains(values[i].Relation)) continue;
-                    if (UIState.FilterByClassess && UIState.FilteredClasses.Contains(values[i].PlayerClass))
+                    if (Services.CompassSettings.CaptureOnlyEnemy && Services.CompassSettings.FriendlyTypes.Contains(values[i].Relation)) continue;
+                    if (Services.CompassSettings.FilterByClasses && Services.CompassSettings.FilteredClasses.Contains(values[i].PlayerClass))
                         continue;
 
-                    if (!UIState.RelationColors.TryGetValue(values[i].Relation, out var color))
-                        UIState.RelationColors.TryGetValue(RelationType.Unknown, out color);
+                    if (!Services.CompassSettings.RelationColors.TryGetValue(values[i].Relation, out var color))
+                        Services.CompassSettings.RelationColors.TryGetValue(RelationType.Unknown, out color);
 
                     var ScreenPosition = GetScreenPos(values[i]);
 
                     draw_list.AddCircleFilled(
                         new Vector2(window_pos.X + ScreenPosition.X, window_pos.Y + ScreenPosition.Y),
-                        UIState.PlayerSize, color.ToDx9ARGB(), UIState.PlayerSize * 2);
+                        Services.CompassSettings.PlayerSize, color.ToDx9ARGB(), Services.CompassSettings.PlayerSize * 2);
 
-                    if (UIState.ShowNicknames)
+                    if (Services.CompassSettings.ShowNicknames)
                         draw_list.AddText(
                             new Vector2(window_pos.X + ScreenPosition.X - values[i].Name.Length * 4 / 2f,
-                                window_pos.Y + ScreenPosition.Y + UIState.PlayerSize), $"{values[i].Name}",
+                                window_pos.Y + ScreenPosition.Y + Services.CompassSettings.PlayerSize), $"{values[i].Name}",
                             color.ToDx9ARGB());
                 }
             }
 
             ImGui.EndWindow();
-            if (this != null && PlayerModels.Count > 0)
-                if (UIState.StatisticsOpened)
+            if (PlayerModels.Count > 0)
+                if (Services.CompassSettings.StatisticsOpened)
                 {
                     var GuldList = PlayerModels.Values
                         .ToArray()
@@ -185,25 +186,25 @@ namespace Capture.TeraModule.ViewModels
                     if (GuldList.Count > 0)
                     {
                         ImGui.SetNextWindowPos(new Vector2(window_pos.X, window_pos.Y + window_size.Y),Condition.Always, window_pos_pivot);
-                        if (ImGui.BeginWindow("Guilds", ref UIState.OverlayOpened, new Vector2(350, 200), 0.3f,
+                        if (ImGui.BeginWindow("Guilds", ref Services.CompassSettings.OverlayOpened, new Vector2(350, 200), 0.3f,
                             WindowFlags.NoTitleBar | WindowFlags.NoFocusOnAppearing))
                         {
                             ImGui.BeginChild("left pane", new Vector2(150, 0), true);
 
                             foreach (var i in GuldList)
                                 if (ImGui.Selectable($"{i.GuildName} ({i.Players.Count})",
-                                    UIState.SelectedGuildName == i.GuildName))
-                                    UIState.SelectedGuildName = i.GuildName;
+                                    Services.CompassSettings.SelectedGuildName == i.GuildName))
+                                    Services.CompassSettings.SelectedGuildName = i.GuildName;
 
                             ImGui.EndChild();
                             ImGui.SameLine();
                             ImGuiNative.igBeginGroup();
                             ImGui.BeginChild("item view", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()),true); // Leave room for 1 line below us
 
-                            ImGui.TextUnformatted($"Guild name {UIState.SelectedGuildName}\n");
+                            ImGui.TextUnformatted($"Guild name {Services.CompassSettings.SelectedGuildName}\n");
                             ImGui.Columns(3, null, true);
 
-                            var players = GuldList.SingleOrDefault(x => x.GuildName == UIState.SelectedGuildName)
+                            var players = GuldList.SingleOrDefault(x => x.GuildName == Services.CompassSettings.SelectedGuildName)
                                 ?.Players?.GroupBy(x => x.PlayerClass,
                                     (key, g) => new {Class = key, Players = g.ToList()});
 
@@ -231,34 +232,34 @@ namespace Capture.TeraModule.ViewModels
                     }
                 }
 
-            if (UIState.SettingsOpened)
+            if (Services.CompassSettings.SettingsOpened)
             {
-                if (ImGui.BeginWindow("Settings", ref UIState.SettingsOpened, new Vector2(350, 400), 0.3f,
+                if (ImGui.BeginWindow("Settings", ref Services.CompassSettings.SettingsOpened, new Vector2(350, 400), 0.3f,
                     WindowFlags.NoFocusOnAppearing | WindowFlags.AlwaysAutoResize))
                 {
-                    ImGui.Checkbox("Guild statistic", ref UIState.StatisticsOpened);
-                    ImGui.Checkbox("Show only enemy players", ref UIState.CaptureOnlyEnemy);
-                    ImGui.Checkbox("Filter by classes", ref UIState.FilterByClassess);
-                    ImGui.Checkbox("Show nicknames", ref UIState.ShowNicknames);
-                    ImGui.Checkbox("Perfomance test", ref UIState.ShowFPS);
-                    ImGui.SliderFloat("Zoom", ref UIState.Zoom, 1, 20, $"Zoom={UIState.Zoom}", 2f);
+                    ImGui.Checkbox("Guild statistic", ref Services.CompassSettings.StatisticsOpened);
+                    ImGui.Checkbox("Show only enemy players", ref Services.CompassSettings.CaptureOnlyEnemy);
+                    ImGui.Checkbox("Filter by classes", ref Services.CompassSettings._filterByClasses);
+                    ImGui.Checkbox("Show nicknames", ref Services.CompassSettings._showNicknames);
+                    ImGui.Checkbox("Perfomance test", ref Services.CompassSettings._showFps);
+                    ImGui.SliderFloat("Zoom", ref Services.CompassSettings._zoom, 1, 20, $"Zoom={Services.CompassSettings.Zoom}", 2f);
                     if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
-                        ImGui.SetTooltip($"{UIState.Zoom:F2}");
-                    ImGui.SliderInt("PlayerSize", ref UIState.PlayerSize, 1, 10, $"PlayerSize = {UIState.PlayerSize}");
+                        ImGui.SetTooltip($"{Services.CompassSettings.Zoom:F2}");
+                    ImGui.SliderInt("PlayerSize", ref Services.CompassSettings._playerSize, 1, 10, $"PlayerSize = {Services.CompassSettings.PlayerSize}");
                     if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
-                        ImGui.SetTooltip($"{UIState.PlayerSize}");
+                        ImGui.SetTooltip($"{Services.CompassSettings.PlayerSize}");
                     if (ImGui.CollapsingHeader("Settings for filter by class            ",TreeNodeFlags.CollapsingHeader | TreeNodeFlags.AllowItemOverlap))
                     {
                         ImGui.TextUnformatted("Common ignored");
                         ImGui.Columns(3, null, false);
                         foreach (PlayerClass i in Enum.GetValues(typeof(PlayerClass)))
                         {
-                            var flag = UIState.FilteredClasses.Contains(i);
+                            var flag = Services.CompassSettings.FilteredClasses.Contains(i);
                             ImGui.Checkbox(i.ToString(), ref flag);
                             if (flag)
-                                UIState.FilteredClasses.Add(i);
-                            else if (UIState.FilteredClasses.Contains(i))
-                                UIState.FilteredClasses.Remove(i);
+                                Services.CompassSettings.FilteredClasses.Add(i);
+                            else if (Services.CompassSettings.FilteredClasses.Contains(i))
+                                Services.CompassSettings.FilteredClasses.Remove(i);
                             ImGui.NextColumn();
                         }
 
@@ -267,34 +268,39 @@ namespace Capture.TeraModule.ViewModels
 
                     if (ImGui.CollapsingHeader("Colors for player relation", TreeNodeFlags.CollapsingHeader))
                     {
-                        var keys = UIState.RelationColors.Keys.ToArray();
+                        var keys = Services.CompassSettings.RelationColors.Keys.ToArray();
                         for (var i = 0; i < keys.Length; i++)
                         {
-                            UIState.RelationColors.TryGetValue(keys[i], out var color);
-                            UIState.R[i] = ((color >> 16) & 255) / 255f;
-                            UIState.G[i] = ((color >> 8) & 255) / 255f;
-                            UIState.B[i] = ((color >> 0) & 255) / 255f;
-                            UIState.A[i] = ((color >> 24) & 255) / 255f;
+                            Services.CompassSettings.RelationColors.TryGetValue(keys[i], out var color);
+                            Services.CompassSettings.R[i] = ((color >> 16) & 255) / 255f;
+                            Services.CompassSettings.G[i] = ((color >> 8) & 255) / 255f;
+                            Services.CompassSettings.B[i] = ((color >> 0) & 255) / 255f;
+                            Services.CompassSettings.A[i] = ((color >> 24) & 255) / 255f;
                             ImGui.TextUnformatted(keys[i].ToString());
                             ImGui.SameLine();
-                            ImGui.ColorEdit4(keys[i].ToString(), ref UIState.R[i], ref UIState.G[i], ref UIState.B[i],
-                                ref UIState.A[i],
+                            ImGui.ColorEdit4(keys[i].ToString(), ref Services.CompassSettings.R[i], ref Services.CompassSettings.G[i], ref Services.CompassSettings.B[i],
+                                ref Services.CompassSettings.A[i],
                                 ColorEditFlags.NoInputs | ColorEditFlags.RGB | ColorEditFlags.NoLabel);
 
-                            uint mr = UIState.R[i] >= 1.0 ? 255 :
-                                    UIState.R[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.R[i] * 255f),
+                            uint mr = Services.CompassSettings.R[i] >= 1.0 ? 255 :
+                                    Services.CompassSettings.R[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.R[i] * 255f),
 
-                                mg = UIState.G[i] >= 1.0 ? 255 :
-                                    UIState.G[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.G[i] * 255f),
+                                mg = Services.CompassSettings.G[i] >= 1.0 ? 255 :
+                                    Services.CompassSettings.G[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.G[i] * 255f),
 
-                                mb = UIState.B[i] >= 1.0 ? 255 :
-                                    UIState.B[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.B[i] * 255f),
+                                mb = Services.CompassSettings.B[i] >= 1.0 ? 255 :
+                                    Services.CompassSettings.B[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.B[i] * 255f),
 
-                                ma = UIState.A[i] >= 1.0 ? 255 :
-                                    UIState.A[i] <= 0.0 ? 0 : (uint) Math.Round(UIState.A[i] * 255f);
+                                ma = Services.CompassSettings.A[i] >= 1.0 ? 255 :
+                                    Services.CompassSettings.A[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.A[i] * 255f);
 
-                            UIState.RelationColors[keys[i]] = (ma << 24) | (mr << 16) | (mg << 8) | (mb << 0);
+                            Services.CompassSettings.RelationColors[keys[i]] = (ma << 24) | (mr << 16) | (mg << 8) | (mb << 0);
                         }
+                    }
+
+                    if (ImGui.Button("Save settings"))
+                    {
+                        Services.Tracker.RunAutoPersist();
                     }
                 }
 

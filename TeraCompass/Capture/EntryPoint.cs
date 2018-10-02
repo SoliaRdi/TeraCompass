@@ -6,6 +6,7 @@ using Capture.Hook;
 using Capture.Interface;
 using System.Threading.Tasks;
 using System.Runtime.Remoting.Channels.Ipc;
+using Capture.TeraModule.Settings;
 
 namespace Capture
 {
@@ -26,7 +27,7 @@ namespace Capture
             // Get reference to IPC to host application
             // Note: any methods called or events triggered against _interface will execute in the host process.
             _interface = EasyHook.RemoteHooking.IpcConnectClient<CaptureInterface>(channelName);
-
+            
             // We try to ping immediately, if it fails then injection fails
             _interface.Ping();
 
@@ -66,6 +67,7 @@ namespace Capture
             _runWait.Reset();
             try
             {
+                
                 // Initialise the Hook
                 if (!InitialiseDirectXHook(config))
                 {

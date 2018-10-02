@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Capture")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("TeraCompass")]
+[assembly: AssemblyDescription("github.com/SoliaRdi/TeraCompass")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Capture")]
-[assembly: AssemblyCopyright("Copyright © Justin Stenning 2013")]
+[assembly: AssemblyProduct("TeraCompass")]
+[assembly: AssemblyCopyright("Copyright © SoliaRdi")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

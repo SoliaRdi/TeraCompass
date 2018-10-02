@@ -13,6 +13,7 @@ using Capture.TeraModule;
 using Capture.TeraModule.CameraFinder;
 using Capture.TeraModule.GameModels;
 using Capture.TeraModule.Processing;
+using Capture.TeraModule.Settings;
 using Capture.TeraModule.ViewModels;
 using SharpDX;
 using TeraCompass.Processing;
@@ -148,7 +149,8 @@ namespace Capture.Hook
             CurrentProcess = Process.GetProcessById(ProcessId);
             DebugListener listen = new DebugListener(Interface);
             Debug.Listeners.Add(listen);
-
+            Services.Tracker.Configure(Services.CompassSettings).Apply();
+            DebugMessage("Settings loaded");
             TeraSniffer.Instance.Enabled = true;
             TeraSniffer.Instance.Warning += DebugMessage;
             PacketProcessor.Instance.Connected += s => { Debug.Write("Connected"); };
