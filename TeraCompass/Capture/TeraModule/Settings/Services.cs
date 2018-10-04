@@ -98,12 +98,13 @@ namespace Capture.TeraModule.Settings
             {
                 {RelationType.Unknown, Color.Red.ToARGB()},
                 {RelationType.Casual, Color.White.ToARGB()},
-                {RelationType.RaidMyParty, (uint) Color.FromArgb(255, 30, 109, 255).ToARGB()},
+                {RelationType.RaidMyParty,Color.FromArgb(255, 30, 109, 255).ToARGB()},
                 {RelationType.PK, Color.OrangeRed.ToARGB()},
                 {RelationType.GuildMember, Color.FromArgb(255, 21, 236, 25).ToARGB()},
                 {RelationType.EnemyRaid, Color.Red.ToARGB()},
                 {RelationType.GvG, Color.Red.ToARGB()},
                 {RelationType.MyRaid, Color.FromArgb(33, 214, 33).ToARGB()},
+                {RelationType.Dead, Color.FromArgb(75, 79, 79).ToARGB()},
             };
             R = new float[RelationColors.Keys.Count];
             G = new float[RelationColors.Keys.Count];

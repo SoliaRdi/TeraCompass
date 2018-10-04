@@ -8,7 +8,7 @@ using TeraCompass.Tera.Core.Game.Messages.Server;
 namespace TeraCompass.Tera.Core.Game
 {
     // A player character, including your own
-    public class UserEntity : Entity,IEntity
+    public class UserEntity : Entity
     {
         public UserEntity(EntityId id)
             : base(id)
@@ -25,6 +25,7 @@ namespace TeraCompass.Tera.Core.Game
             ServerId = message.ServerId;
             Level = message.Level;
             Relation = message.Relation;
+            Dead = message.Dead;
         }
 
         internal UserEntity(LoginServerMessage message)

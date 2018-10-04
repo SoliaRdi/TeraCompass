@@ -21,6 +21,7 @@ namespace Capture.TeraModule.ViewModels
         public CameraScanner CameraScanner;
         public Dictionary<EntityId, PlayerModel> PlayerModels;
         public List<string> DeathList;
+
         public CompassViewModel()
         {
             DeathList = new List<string>();
@@ -49,7 +50,7 @@ namespace Capture.TeraModule.ViewModels
         {
             if (PacketProcessor.Instance.EntityTracker.CompassUser.Id != obj.Id)
             {
-                var entity = (UserEntity)obj;
+                var entity = (UserEntity) obj;
                 var founded = PlayerModels.TryGetValue(obj.Id, out var model);
                 if (!founded)
                 {
@@ -58,8 +59,7 @@ namespace Capture.TeraModule.ViewModels
                 }
                 else
                 {
-                    //if (obj.Dead && !model.Dead)
-                    //    DeathList.Add($"{entity.Name}({entity.GuildName})");
+                    model.Dead = obj.Dead;
                     model.Position = obj.Position;
                     model.Relation = obj.Relation;
                 }
@@ -116,7 +116,8 @@ namespace Capture.TeraModule.ViewModels
             if (Services.CompassSettings.OverlayCorner != -1)
                 ImGui.SetNextWindowPos(window_pos, Condition.Always, window_pos_pivot);
 
-            if (ImGui.BeginWindow("Overlay", ref Services.CompassSettings.OverlayOpened, window_size, 0.3f,(Services.CompassSettings.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoFocusOnAppearing))
+            if (ImGui.BeginWindow("Overlay", ref Services.CompassSettings.OverlayOpened, window_size, 0.3f,
+                (Services.CompassSettings.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoFocusOnAppearing))
             {
                 window_pos = ImGui.GetWindowPosition();
                 if (ImGuiNative.igBeginPopupContextWindow("Options", 1, true))
@@ -155,21 +156,31 @@ namespace Capture.TeraModule.ViewModels
                     if (Services.CompassSettings.CaptureOnlyEnemy && Services.CompassSettings.FriendlyTypes.Contains(values[i].Relation)) continue;
                     if (Services.CompassSettings.FilterByClasses && Services.CompassSettings.FilteredClasses.Contains(values[i].PlayerClass))
                         continue;
-
-                    if (!Services.CompassSettings.RelationColors.TryGetValue(values[i].Relation, out var color))
-                        Services.CompassSettings.RelationColors.TryGetValue(RelationType.Unknown, out color);
+                    uint color;
+                    if (values[i].Dead)
+                    {
+                        Services.CompassSettings.RelationColors.TryGetValue(RelationType.Dead, out color);
+                    }
+                    else
+                    {
+                        if (!Services.CompassSettings.RelationColors.TryGetValue(values[i].Relation, out color))
+                            Services.CompassSettings.RelationColors.TryGetValue(RelationType.Unknown, out color);
+                    }
+                    
 
                     var ScreenPosition = GetScreenPos(values[i]);
 
+                    color = color.ToDx9ARGB();
+
                     draw_list.AddCircleFilled(
                         new Vector2(window_pos.X + ScreenPosition.X, window_pos.Y + ScreenPosition.Y),
-                        Services.CompassSettings.PlayerSize, color.ToDx9ARGB(), Services.CompassSettings.PlayerSize * 2);
+                        Services.CompassSettings.PlayerSize, color, Services.CompassSettings.PlayerSize * 2);
 
                     if (Services.CompassSettings.ShowNicknames)
                         draw_list.AddText(
                             new Vector2(window_pos.X + ScreenPosition.X - values[i].Name.Length * 4 / 2f,
                                 window_pos.Y + ScreenPosition.Y + Services.CompassSettings.PlayerSize), $"{values[i].Name}",
-                            color.ToDx9ARGB());
+                            color);
                 }
             }
 
@@ -185,7 +196,7 @@ namespace Capture.TeraModule.ViewModels
 
                     if (GuldList.Count > 0)
                     {
-                        ImGui.SetNextWindowPos(new Vector2(window_pos.X, window_pos.Y + window_size.Y),Condition.Always, window_pos_pivot);
+                        ImGui.SetNextWindowPos(new Vector2(window_pos.X, window_pos.Y + window_size.Y), Condition.Always, window_pos_pivot);
                         if (ImGui.BeginWindow("Guilds", ref Services.CompassSettings.OverlayOpened, new Vector2(350, 200), 0.3f,
                             WindowFlags.NoTitleBar | WindowFlags.NoFocusOnAppearing))
                         {
@@ -199,7 +210,7 @@ namespace Capture.TeraModule.ViewModels
                             ImGui.EndChild();
                             ImGui.SameLine();
                             ImGuiNative.igBeginGroup();
-                            ImGui.BeginChild("item view", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()),true); // Leave room for 1 line below us
+                            ImGui.BeginChild("item view", new Vector2(0, -ImGui.GetFrameHeightWithSpacing()), true); // Leave room for 1 line below us
 
                             ImGui.TextUnformatted($"Guild name {Services.CompassSettings.SelectedGuildName}\n");
                             ImGui.Columns(3, null, true);
@@ -248,7 +259,7 @@ namespace Capture.TeraModule.ViewModels
                     ImGui.SliderInt("PlayerSize", ref Services.CompassSettings._playerSize, 1, 10, $"PlayerSize = {Services.CompassSettings.PlayerSize}");
                     if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
                         ImGui.SetTooltip($"{Services.CompassSettings.PlayerSize}");
-                    if (ImGui.CollapsingHeader("Settings for filter by class            ",TreeNodeFlags.CollapsingHeader | TreeNodeFlags.AllowItemOverlap))
+                    if (ImGui.CollapsingHeader("Settings for filter by class            ", TreeNodeFlags.CollapsingHeader | TreeNodeFlags.AllowItemOverlap))
                     {
                         ImGui.TextUnformatted("Common ignored");
                         ImGui.Columns(3, null, false);
@@ -284,13 +295,10 @@ namespace Capture.TeraModule.ViewModels
 
                             uint mr = Services.CompassSettings.R[i] >= 1.0 ? 255 :
                                     Services.CompassSettings.R[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.R[i] * 255f),
-
                                 mg = Services.CompassSettings.G[i] >= 1.0 ? 255 :
                                     Services.CompassSettings.G[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.G[i] * 255f),
-
                                 mb = Services.CompassSettings.B[i] >= 1.0 ? 255 :
                                     Services.CompassSettings.B[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.B[i] * 255f),
-
                                 ma = Services.CompassSettings.A[i] >= 1.0 ? 255 :
                                     Services.CompassSettings.A[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.A[i] * 255f);
 
@@ -300,6 +308,13 @@ namespace Capture.TeraModule.ViewModels
 
                     if (ImGui.Button("Save settings"))
                     {
+                        Services.Tracker.RunAutoPersist();
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button("Reset to default"))
+                    {
+                        Services.CompassSettings.ResetSettings();
                         Services.Tracker.RunAutoPersist();
                     }
                 }

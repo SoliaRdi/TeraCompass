@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("TeraCompass")]
 [assembly: AssemblyDescription("github.com/SoliaRdi/TeraCompass")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("TeraCompass")]
 [assembly: AssemblyProduct("TeraCompass")]
 [assembly: AssemblyCopyright("Copyright © SoliaRdi")]
 [assembly: AssemblyTrademark("")]

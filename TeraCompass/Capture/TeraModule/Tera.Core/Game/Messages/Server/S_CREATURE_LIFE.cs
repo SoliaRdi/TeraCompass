@@ -13,6 +13,6 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
 
         public EntityId User { get; }
         public Vector3f Position { get; private set; }
-        public bool Dead { get; }
+        public bool Dead { get; set; }
     }
 }

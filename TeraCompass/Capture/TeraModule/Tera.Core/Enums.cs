@@ -1,4 +1,6 @@
-﻿namespace TeraCompass.Tera.Core
+﻿using System;
+
+namespace TeraCompass.Tera.Core
 {
     public enum NotificationType
     {
@@ -254,6 +256,7 @@
         Error,
         None
     }
+    [Flags]
     public enum RelationType
     {
         Unknown,
@@ -263,6 +266,7 @@
         GuildMember = 6,
         EnemyRaid = 8,
         GvG = 27,
-        MyRaid = 29
+        MyRaid = 29,
+        Dead=300
     }
 }

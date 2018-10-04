@@ -112,7 +112,7 @@ namespace Capture.GUI
                 {
                     RAWINPUT inp = (RAWINPUT) Marshal.PtrToStructure(pData, typeof(RAWINPUT));
                     Marshal.Release(pData);
-                    if (inp.mouse.ulButtons != 0)
+                    if (inp.header.dwType == RawDeviceType.RIM_TYPEMOUSE&&inp.mouse.ulButtons != 0)
                     {
                         switch (inp.mouse.ulButtons)
                         {

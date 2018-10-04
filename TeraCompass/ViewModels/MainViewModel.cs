@@ -90,20 +90,19 @@ namespace TeraCompass.ViewModels
             Process process= Process.GetProcessesByName(exeName).FirstOrDefault();
             if (process !=null)
             {
-                if (process.MainWindowHandle == IntPtr.Zero)
-                {
-                    process.WaitForInputIdle();
-                    if (WaitSplash)
-                        while (!GetClassNameOfWindow(process.MainWindowHandle).Contains("Launch"))
-                        {
-                            //process = Process.GetProcessesByName(exeName).FirstOrDefault();
-                            process.Refresh();
-                            Thread.Sleep(50);
-                        }
-                }
+                process.WaitForInputIdle();
+                var className = GetClassNameOfWindow(process.MainWindowHandle);
+                if (WaitSplash)
+                    while (!className.Contains("Launch"))
+                    {
+                        //process = Process.GetProcessesByName(exeName).FirstOrDefault();
+                        process.Refresh();
+                        Thread.Sleep(50);
+                        className = GetClassNameOfWindow(process.MainWindowHandle);
+                    }
                 process.Refresh();
                 Thread.Sleep(100);
-                LogEvent(GetClassNameOfWindow(process.MainWindowHandle));
+                LogEvent(className);
                 if (process.MainWindowHandle == IntPtr.Zero)
                 {
                     LogEvent("no MainWindowHandle...");

@@ -88,6 +88,17 @@ namespace TeraCompass.Tera.Core.Game.Services
             }
             
         }
+        public void Update(S_DEAD_LOCATION m)
+        {
+            var entity = GetOrNull(m.EntityId);
+            if (entity != null)
+            {
+                entity.Position = m.Location;
+                entity.Dead = true;
+                OnEntityUpdated(entity);
+            }
+
+        }
 
         public void Update(C_PLAYER_LOCATION m)
         {
@@ -139,6 +150,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             message.On<SpawnMeServerMessage>(Update);
             message.On<S_CHANGE_RELATION>(Update);
             message.On<SCreatureLife>(Update);
+            message.On<S_DEAD_LOCATION>(Update);
         }
 
         private Entity LoginMe(LoginServerMessage m)

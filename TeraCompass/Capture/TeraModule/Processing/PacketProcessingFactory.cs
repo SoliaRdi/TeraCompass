@@ -53,6 +53,7 @@ namespace Capture.TeraModule.Processing
                 { typeof(SpawnMeServerMessage), new Action<SpawnMeServerMessage>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
                 { typeof(S_CHANGE_RELATION), new Action<S_CHANGE_RELATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
                 { typeof(SCreatureLife), new Action<SCreatureLife>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+                { typeof(S_DEAD_LOCATION), new Action<S_DEAD_LOCATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             };
             entityTrackerProcessing.ToList().ForEach(x => MainProcessor[x.Key] = x.Value);
         }

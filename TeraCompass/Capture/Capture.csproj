@@ -77,7 +77,6 @@
     <Compile Include="Exceptions.cs" />
     <Compile Include="GUI\ColorConverter.cs" />
     <Compile Include="GUI\ImGUIRenderer.cs" />
-    <Compile Include="GUI\UIState.cs" />
     <Compile Include="GUI\Vertex\GuiVertex.cs" />
     <Compile Include="Hook\DebugListener.cs" />
     <Compile Include="Hook\Input\Constants.cs" />
@@ -110,6 +109,7 @@
     <Compile Include="SharpDx\IComponent.cs" />
     <Compile Include="TeraModule\CameraFinder\CameraScanner.cs" />
     <Compile Include="TeraModule\CameraFinder\MemoryScanner.cs" />
+    <Compile Include="TeraModule\Processing\Packets\S_DEAD_LOCATION.cs" />
     <Compile Include="TeraModule\Settings\Services.cs" />
     <Compile Include="TeraModule\ViewModels\CompassViewModel.cs" />
     <Compile Include="TeraModule\GameModels\PlayerModel.cs" />

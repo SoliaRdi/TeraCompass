@@ -18,7 +18,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Relation =(RelationType) reader.ReadInt32();
             RaceGenderClass = new RaceGenderClass(reader.ReadInt32());
             reader.Skip(11);
-            Dead = (reader.ReadByte() & 1) == 0;
+            Dead = reader.ReadByte() == 0;
             reader.Skip(121);
             Level = reader.ReadInt16();
             reader.BaseStream.Position=nameOffset-4;

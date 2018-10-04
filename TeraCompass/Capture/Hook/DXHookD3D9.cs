@@ -281,7 +281,7 @@ namespace Capture.Hook
                     }
                     else if(imGuiRender!=null)
                     {
-                        if (UIState.ShowFPS)
+                        if (Services.CompassSettings.ShowFPS)
                         {
                             PerfomanseTester.Reset();
                             PerfomanseTester.Start();
@@ -293,14 +293,14 @@ namespace Capture.Hook
 
                         //if (UIState.SettingsOpened)
                         //    ImGuiNative.igShowDemoWindow(ref UIState.OverlayOpened);
-                        if (UIState.ShowFPS)
+                        if (Services.CompassSettings.ShowFPS)
                         {
                             var draw_list = ImGui.GetOverlayDrawList();
                             draw_list.AddText(new Vector2(10,10), $"PerfomanseTester = {Elapsed}", Color.Red.ToDx9ARGB());
                         }
                             
                         imGuiRender.Draw();
-                        if (UIState.ShowFPS && PerfomanseTester.IsRunning)
+                        if (Services.CompassSettings.ShowFPS && PerfomanseTester.IsRunning)
                         {
                             PerfomanseTester.Stop();
                             Elapsed = PerfomanseTester.Elapsed;

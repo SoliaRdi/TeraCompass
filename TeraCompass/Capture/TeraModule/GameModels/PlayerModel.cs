@@ -23,6 +23,7 @@ namespace Capture.TeraModule.GameModels
             Name = obj.Name;
             GuildName = obj.GuildName;
             PlayerClass = obj.RaceGenderClass.Class;
+            Dead = obj.Dead;
         }
     }
 }
