@@ -67,14 +67,8 @@ namespace Capture.Hook
             }
         }
 
-        protected void Frame()
-        {
-            FPS.Frame();
-        }
-
         protected void DebugMessage(string message)
         {
-#if DEBUG
             try
             {
                 Interface.Message(MessageType.Debug, HookName + ": " + message);
@@ -87,7 +81,7 @@ namespace Capture.Hook
             {
                 // Ignore all other exceptions
             }
-#endif
+
         }
 
         protected IntPtr[] GetVTblAddresses(IntPtr pointer, int numberOfMethods)

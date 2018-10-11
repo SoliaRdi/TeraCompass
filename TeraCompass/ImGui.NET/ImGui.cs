@@ -663,7 +663,6 @@ namespace ImGuiNET
 
         public static unsafe bool InputText(string label, byte[] textBuffer, uint bufferSize, InputTextFlags flags, TextEditCallback textEditCallback, IntPtr userData)
         {
-            Debug.Assert(bufferSize <= textBuffer.Length);
             fixed (byte* ptrBuf = textBuffer)
             {
                 return InputText(label, new IntPtr(ptrBuf), bufferSize, flags, textEditCallback, userData);

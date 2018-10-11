@@ -14,7 +14,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Start = reader.ReadVector3f();
             Finish = reader.ReadVector3f();
             Speed = reader.ReadSingle();
-            //Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Id.Id))} {Start} - > {Finish} {Speed} {ActionId}");
+            //Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Id.Id))} {Start} - > {Finish} {Speed} {ActionId}");
         }
 
         public float Speed { get; set; }

@@ -12,7 +12,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Speed = reader.ReadInt16();
             Finish = reader.ReadVector3f();
             Ltype = reader.ReadInt32(); //0 = Move, 7= Rotate standing
-//            Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading} -> {Finish}, S:{Speed} ,{Ltype}");
+//            Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading} -> {Finish}, S:{Speed} ,{Ltype}");
         }
 
         public EntityId Entity { get; }

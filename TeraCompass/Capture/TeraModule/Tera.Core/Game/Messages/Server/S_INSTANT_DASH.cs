@@ -10,7 +10,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             reader.Skip(12);//0?
             Position = reader.ReadVector3f();
             Heading = reader.ReadAngle();
-//            Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Finish} {Heading}");
+//            Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Finish} {Heading}");
         }
 
         public EntityId Entity { get; }

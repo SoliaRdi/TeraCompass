@@ -62,7 +62,7 @@ namespace TeraCompass.NetworkSniffer
                 isInterestingConnection = connection.HasSubscribers;
                 if (!isInterestingConnection) { return; }
                 _connections[connectionId] = connection;
-                Debug.Assert(tcpPacket.PayloadData.Length == 0);
+                Trace.Assert(tcpPacket.PayloadData.Length == 0);
             }
             else
             {

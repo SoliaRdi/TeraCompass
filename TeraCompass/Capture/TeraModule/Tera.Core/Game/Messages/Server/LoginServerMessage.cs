@@ -17,7 +17,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Level = reader.ReadInt16();
             reader.BaseStream.Position = nameOffset - 4;
             Name = reader.ReadTeraString();
-//            Debug.WriteLine(Name + ":" + BitConverter.ToString(BitConverter.GetBytes(Id.Id)) + ":" + ServerId.ToString() + " " + BitConverter.ToString(BitConverter.GetBytes(PlayerId)));
+//            Trace.WriteLine(Name + ":" + BitConverter.ToString(BitConverter.GetBytes(Id.Id)) + ":" + ServerId.ToString() + " " + BitConverter.ToString(BitConverter.GetBytes(PlayerId)));
         }
 
         public EntityId Id { get; private set; }

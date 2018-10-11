@@ -26,7 +26,7 @@ namespace TeraCompass.Tera.Core.Game
                 Race = (Race) ((value - 100)/200%50);
                 Gender = (Gender) (value/100%2);
                 Class = (PlayerClass) (value%100);
-                Debug.Assert(Raw == value);
+                Trace.Assert(Raw == value);
             }
         }
 

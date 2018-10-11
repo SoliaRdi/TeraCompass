@@ -11,7 +11,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             MpRemaining = reader.ReadInt32();
             TotalMp = reader.ReadInt32();
             Unknow3 = reader.ReadInt16();
-            //   Debug.WriteLine("target = " + TargetId + ";Mp left:" + MpRemaining + ";Max MP:" + TotalMp+";Unknow3:"+Unknow3);
+            //   Trace.WriteLine("target = " + TargetId + ";Mp left:" + MpRemaining + ";Max MP:" + TotalMp+";Unknow3:"+Unknow3);
         }
 
         public int Unknow3 { get; }

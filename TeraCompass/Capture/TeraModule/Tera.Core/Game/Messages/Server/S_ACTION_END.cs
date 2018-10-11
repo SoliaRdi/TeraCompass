@@ -14,7 +14,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             SkillId = new SkillId(reader).Id;
             unk = reader.ReadInt32();
             Id = reader.ReadUInt32();
-//            Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading} -> {Finish}, S:{Speed} ,{Ltype} {unk1} {unk2}" );
+//            Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading} -> {Finish}, S:{Speed} ,{Ltype} {unk1} {unk2}" );
         }
 
         public uint Id { get; set; }

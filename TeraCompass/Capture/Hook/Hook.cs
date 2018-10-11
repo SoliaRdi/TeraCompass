@@ -31,7 +31,7 @@ namespace Capture.Hook
             : base(funcToHook, newFunc, owner)
         {
             // Debug assertion that T is a Delegate type
-            System.Diagnostics.Debug.Assert(typeof(Delegate).IsAssignableFrom(typeof(T)));
+            System.Diagnostics.Trace.Assert(typeof(Delegate).IsAssignableFrom(typeof(T)));
 
             Original = (T)(object)Marshal.GetDelegateForFunctionPointer(funcToHook, typeof(T));
         }

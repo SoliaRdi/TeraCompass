@@ -34,7 +34,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             {
                 reader.BaseStream.Position = offset - 4;
                 var pointer = reader.ReadUInt16();
-                Debug.Assert(pointer == offset);//should be the same
+                Trace.Assert(pointer == offset);//should be the same
                 var nextOffset = reader.ReadUInt16();
                 var nameoffset = reader.ReadUInt16();
                 var ServerId = reader.ReadUInt32();
@@ -65,10 +65,10 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                 });
             }
             ;
-            //Debug.WriteLine($"leader:{BitConverter.ToString(BitConverter.GetBytes(LeaderPlayerId))}, party:");
+            //Trace.WriteLine($"leader:{BitConverter.ToString(BitConverter.GetBytes(LeaderPlayerId))}, party:");
             //foreach (PartyMember member in Party)
             //{
-            //    Debug.WriteLine($"{member.PlayerClass} {BitConverter.ToString(BitConverter.GetBytes(member.PlayerId))} {member.Name} :{member.Id.ToString()} caninvite: {member.CanInvite} Status: {member.Status}");
+            //    Trace.WriteLine($"{member.PlayerClass} {BitConverter.ToString(BitConverter.GetBytes(member.PlayerId))} {member.Name} :{member.Id.ToString()} caninvite: {member.CanInvite} Status: {member.Status}");
             //}
         }
 

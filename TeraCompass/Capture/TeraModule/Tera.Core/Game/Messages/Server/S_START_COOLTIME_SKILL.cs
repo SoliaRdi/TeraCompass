@@ -9,7 +9,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             //PrintRaw();
             SkillId = new SkillId(reader).Id;
             Cooldown = reader.ReadInt32();
-            //Debug.WriteLine("cooldown: SkillId = "+SkillId+"; Cooldown:"+Cooldown+"; hasResetted:"+HasResetted);
+            //Trace.WriteLine("cooldown: SkillId = "+SkillId+"; Cooldown:"+Cooldown+"; hasResetted:"+HasResetted);
         }
 
         public int SkillId { get; private set; }

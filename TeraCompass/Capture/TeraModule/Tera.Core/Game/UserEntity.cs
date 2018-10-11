@@ -44,7 +44,6 @@ namespace TeraCompass.Tera.Core.Game
         public uint ServerId { get; set; }
         public uint PlayerId { get; set; }
         public int Level { get; set; }
-
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;

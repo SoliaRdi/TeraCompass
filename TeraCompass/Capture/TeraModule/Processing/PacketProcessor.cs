@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
+using System.Threading.Tasks;
 using Capture.TeraModule.ViewModels;
 using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game;
@@ -26,9 +27,6 @@ namespace Capture.TeraModule.Processing
         internal MessageFactory MessageFactory = new MessageFactory();
         internal bool NeedInit = true;
 
-        
-        public bool NeedToReset;
-        public bool NeedToResetCurrent;
 
         internal PacketProcessingFactory PacketProcessing = new PacketProcessingFactory();
         public Server Server;
@@ -39,17 +37,18 @@ namespace Capture.TeraModule.Processing
             TeraSniffer.Instance.NewConnection += HandleNewConnection;
             TeraSniffer.Instance.EndConnection += HandleEndConnection;
 
-            var packetAnalysis = new Thread(PacketAnalysisLoop);
+            var packetAnalysis = new Task(PacketAnalysisLoop);
             packetAnalysis.Start();
             TeraSniffer.Instance.EnableMessageStorage = true;
         }
 
-        public bool TimedEncounter { get; set; }
+
+
 
         public static PacketProcessor Instance => _instance ?? (_instance = new PacketProcessor());
 
         public EntityTracker EntityTracker { get; internal set; }
-        public bool SendFullDetails { get; set; }
+
 
 
         public void Exit()
@@ -75,7 +74,7 @@ namespace Capture.TeraModule.Processing
         {
             NeedInit = true;
             MessageFactory = new MessageFactory();
-            Debug.WriteLine("ConnectionEnded");
+            Trace.WriteLine("ConnectionEnded");
         }
 
         private void HandleNewConnection(Server server)
@@ -88,19 +87,31 @@ namespace Capture.TeraModule.Processing
         }
         private void PacketAnalysisLoop()
         {
-            
-            while (_keepAlive)
+            try
             {
-                var successDequeue = TeraSniffer.Instance.Packets.TryDequeue(out Message obj);
-                if (!successDequeue)
-                {
-                    Thread.Sleep(1);
-                    continue;
-                }
-                var message = MessageFactory.Create(obj);
-                if (message.GetType() == UnknownType) { continue; }
 
-                PacketProcessing.Process(message);
+
+                while (_keepAlive)
+                {
+                    var successDequeue = TeraSniffer.Instance.Packets.TryDequeue(out Message obj);
+                    if (!successDequeue)
+                    {
+                        Thread.Sleep(1);
+                        continue;
+                    }
+
+                    var message = MessageFactory.Create(obj);
+                    if (message.GetType() == UnknownType)
+                    {
+                        continue;
+                    }
+
+                    PacketProcessing.Process(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"message: {ex.Message}\n inner: {ex.InnerException}  \nstack: {ex.StackTrace}");
             }
         }
     }

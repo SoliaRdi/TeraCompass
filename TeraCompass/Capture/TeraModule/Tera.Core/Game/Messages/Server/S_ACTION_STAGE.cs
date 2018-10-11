@@ -20,7 +20,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Moving = reader.ReadBoolean();
             Destination = reader.ReadVector3f();
             Target = reader.ReadEntityId();
-            //            Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading}, S:{Speed}, {SkillId} {Stage} {Model} {unk} {Id}" );
+            //            Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading}, S:{Speed}, {SkillId} {Stage} {Model} {unk} {Id}" );
         }
 
         public EntityId Entity { get; }

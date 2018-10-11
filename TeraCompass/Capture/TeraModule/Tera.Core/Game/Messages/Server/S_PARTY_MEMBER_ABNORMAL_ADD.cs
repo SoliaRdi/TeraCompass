@@ -11,7 +11,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             AbnormalityId = reader.ReadInt32();
             Duration = reader.ReadInt64();
             Stack = reader.ReadInt32();
-            //  Debug.WriteLine("target = " + TargetId + ";Abnormality:" + AbnormalityId + ";Duration:" + Duration +
+            //  Trace.WriteLine("target = " + TargetId + ";Abnormality:" + AbnormalityId + ";Duration:" + Duration +
             //                  ";Stack:" + Stack);
         }
 

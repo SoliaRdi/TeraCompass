@@ -14,7 +14,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Finish = reader.ReadVector3f();
             Ltype = reader.ReadInt32();
             unk2 = reader.ReadByte();
-//            Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading} -> {Finish}, S:{Speed} ,{Ltype} {unk1} {unk2}" );
+//            Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Start} {Heading} -> {Finish}, S:{Speed} ,{Ltype} {unk1} {unk2}" );
         }
 
         public byte unk2 { get; set; }

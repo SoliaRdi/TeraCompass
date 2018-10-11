@@ -13,7 +13,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             AuthorId = reader.ReadUInt64();
             AuthorName = reader.ReadTeraString();
             Text = reader.ReadTeraString();
-            Debug.WriteLine("Channel:"+Channel+";Username:"+AuthorName+";Text:"+Text+";AuthorId:"+AuthorId);
+            Trace.WriteLine("Channel:"+Channel+";Username:"+AuthorName+";Text:"+Text+";AuthorId:"+AuthorId);
         }
         public ushort AuthorNameOffset { get; set; }
         public ushort TextOffset { get; set; }

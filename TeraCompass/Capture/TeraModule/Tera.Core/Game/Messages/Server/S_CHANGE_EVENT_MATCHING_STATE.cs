@@ -23,7 +23,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             {
                 reader.BaseStream.Position = offset - 4;
                 var pointer = reader.ReadUInt16();
-                Debug.Assert(pointer == offset);//should be the same
+                Trace.Assert(pointer == offset);//should be the same
                 
                 var nextOffset = reader.ReadUInt16();
                 offset = nextOffset;

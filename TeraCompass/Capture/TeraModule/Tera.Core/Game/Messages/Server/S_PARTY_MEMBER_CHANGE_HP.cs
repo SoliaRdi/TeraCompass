@@ -10,7 +10,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             PlayerId = reader.ReadUInt32();
             HpRemaining = reader.ReadInt64();
             TotalHp = reader.ReadInt64();
-            // Debug.WriteLine("target = " + TargetId + ";Hp left:" + HpRemaining + ";Max HP:" + TotalHp + ");
+            // Trace.WriteLine("target = " + TargetId + ";Hp left:" + HpRemaining + ";Max HP:" + TotalHp + ");
         }
 
         public int Unknow3 { get; }

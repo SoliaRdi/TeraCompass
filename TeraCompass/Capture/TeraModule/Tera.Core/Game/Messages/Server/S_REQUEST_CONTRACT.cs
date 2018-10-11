@@ -16,7 +16,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             //int time = reader.ReadInt32();
             Sender = reader.ReadTeraString();
             Recipient = reader.ReadTeraString();
-            Debug.WriteLine("type:"+type+";translated:"+Type+"; Sender:"+Sender+";Recipient"+Recipient);
+            Trace.WriteLine("type:"+type+";translated:"+Type+"; Sender:"+Sender+";Recipient"+Recipient);
         }
 
         public string Sender { get; private set; }

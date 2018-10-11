@@ -11,7 +11,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Enraged = (reader.ReadByte() & 1) == 1;
             reader.Skip(4);
             Target = reader.ReadEntityId();
-            //Debug.WriteLine("NPC:" + Npc + ";Target:" + Target + (Enraged?" Enraged":""));
+            //Trace.WriteLine("NPC:" + Npc + ";Target:" + Target + (Enraged?" Enraged":""));
         }
 
         public EntityId Npc { get; }

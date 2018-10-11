@@ -122,7 +122,7 @@ namespace Capture.TeraModule.CameraFinder
         {
             var stream = new MemoryStream(size);
             ReadMemory(stream, baseAddress, size);
-            Debug.Assert(stream.GetBuffer().Length == stream.Length);
+            Trace.Assert(stream.GetBuffer().Length == stream.Length);
             return stream.GetBuffer();
         }
 

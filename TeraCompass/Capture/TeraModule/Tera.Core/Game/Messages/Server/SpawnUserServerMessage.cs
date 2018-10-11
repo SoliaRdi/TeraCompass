@@ -24,7 +24,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             reader.BaseStream.Position=nameOffset-4;
             Name = reader.ReadTeraString();
             GuildName = reader.ReadTeraString();
-            //Debug.WriteLine(Name + ":" + BitConverter.ToString(BitConverter.GetBytes(Id.Id))+ ":"+ ServerId.ToString()+" "+ BitConverter.ToString(BitConverter.GetBytes(PlayerId))+" "+Dead);
+            //Trace.WriteLine(Name + ":" + BitConverter.ToString(BitConverter.GetBytes(Id.Id))+ ":"+ ServerId.ToString()+" "+ BitConverter.ToString(BitConverter.GetBytes(PlayerId))+" "+Dead);
         }
         public RelationType Relation { get; set; }
         public int Level { get; private set; }

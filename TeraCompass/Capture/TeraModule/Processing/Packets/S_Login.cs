@@ -25,9 +25,8 @@ namespace Capture.TeraModule.Processing.Packets
                     }
                     catch
                     {
-                        Debug.WriteLine(
-                            "New server:" + PacketProcessor.Instance.Server + ";Old server Id:" + PacketProcessor.Instance.EntityTracker.CompassUser?.ServerId,
-                            false, true);
+                        Trace.WriteLine(
+                            "New server:" + PacketProcessor.Instance.Server + ";Old server Id:" + PacketProcessor.Instance.EntityTracker.CompassUser?.ServerId);
                         throw;
                     }
                 }
@@ -39,8 +38,6 @@ namespace Capture.TeraModule.Processing.Packets
             }
 
             PacketProcessor.Instance.EntityTracker.Update(message);
-
-            PacketProcessor.Instance.PacketProcessing.Update();
             PacketProcessor.Instance.CompassViewModel=new CompassViewModel();
         }
     }

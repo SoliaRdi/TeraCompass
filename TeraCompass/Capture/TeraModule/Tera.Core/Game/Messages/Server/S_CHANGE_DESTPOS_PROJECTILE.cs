@@ -9,7 +9,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
         {
             Id = reader.ReadEntityId();
             Finish = reader.ReadVector3f();
-            //Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Id.Id))} - > {Finish}");
+            //Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Id.Id))} - > {Finish}");
         }
 
         public Vector3f Finish { get; set; }

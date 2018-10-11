@@ -9,7 +9,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Entity = reader.ReadEntityId();
             Heading = reader.ReadAngle();
             NeedTime = reader.ReadInt16();
-//            Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Heading} {Time}");
+//            Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Entity.Id))}: {Heading} {Time}");
         }
 
         public EntityId Entity { get; }

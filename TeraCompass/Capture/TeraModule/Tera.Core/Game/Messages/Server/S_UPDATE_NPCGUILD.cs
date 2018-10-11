@@ -22,7 +22,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Type = (NpcGuildType)type;
             reader.Skip(8);
             Credits = reader.ReadInt32();
-            Debug.WriteLine("type:"+type+";translated:"+Type + "; Credits:"+Credits);
+            Trace.WriteLine("type:"+type+";translated:"+Type + "; Credits:"+Credits);
         }
 
         public EntityId User { get; private set; }

@@ -13,7 +13,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Duration = reader.ReadInt64();
             StackCounter = reader.ReadInt32();
 
-            //Debug.WriteLine("Target:"+TargetId+";Abnormality:"+AbnormalityId+";Duration:"+Duration+";Uknow:"+Unknow+";Stack:"+StackCounter);
+            //Trace.WriteLine("Target:"+TargetId+";Abnormality:"+AbnormalityId+";Duration:"+Duration+";Uknow:"+Unknow+";Stack:"+StackCounter);
         }
 
         public long Duration { get; }

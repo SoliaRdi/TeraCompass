@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -12,6 +14,10 @@ using ImGuiNET;
 using SharpDX;
 using SharpDX.Direct3D9;
 using SharpDX.Mathematics.Interop;
+using TeraCompass.Processing;
+using Color = System.Drawing.Color;
+using ImageFormat = System.Drawing.Imaging.ImageFormat;
+using RectangleF = SharpDX.RectangleF;
 using Vector2 = System.Numerics.Vector2;
 
 namespace Capture.GUI
@@ -37,8 +43,10 @@ namespace Capture.GUI
         private Texture texNative;
         private readonly inputHookDelegate OriginalInputHook;
         private readonly TWindowProcW OriginalWndProcHook;
+
         public ImGuiRender(Device dev, NativeMethods.Rect windowRect, CaptureInterface _interface, IntPtr windowHandle)
         {
+
             device = dev;
             _windowHandle = windowHandle;
             IntPtr InputHookAddr = LocalHook.GetProcAddress("user32.dll", "GetRawInputData");
@@ -73,7 +81,7 @@ namespace Capture.GUI
             catch (Exception e)
 
             {
-                Debug.Write(e.Message);
+                Trace.Write(e.Message);
             }
         }
 
@@ -95,7 +103,7 @@ namespace Capture.GUI
             }
             catch (Exception ex)
             {
-                Debug.Write("ERROR wndproc: " + ex.Message);
+                Trace.Write("ERROR wndproc: " + ex.Message);
             }
             
 
@@ -145,14 +153,14 @@ namespace Capture.GUI
                     //if (virtualKey != 0)
                     //{
                     //    var keyCode = VirtualKeyCorrection(inp, virtualKey, (flags & VIRTUALKEY.RI_KEY_E0) != 0, makeCode);
-                    //    Debug.Write(keyCode);
+                    //    Trace.Write(keyCode);
                     //}
-                    
+
                 }
             }
             catch (Exception ex)
             {
-                Debug.Write("ERROR input: " + ex.InnerException);
+                Trace.Write("ERROR input: " + ex.InnerException);
             }
 
             return res;
@@ -216,6 +224,7 @@ namespace Capture.GUI
             fixed (char* pChars = ranges)
             {
                 io.FontAtlas.AddFontFromFileTTF("C:\\Windows\\Fonts\\tahoma.ttf", 12f, pChars);
+                
             }
 
             var texDataAsRgba32 = io.FontAtlas.GetTexDataAsRGBA32();
@@ -228,10 +237,13 @@ namespace Capture.GUI
                     texDataAsRgba32.Pixels + texDataAsRgba32.Width * texDataAsRgba32.BytesPerPixel * y,
                     texDataAsRgba32.Width * texDataAsRgba32.BytesPerPixel);
             t.UnlockRectangle(0);
-
             io.FontAtlas.SetTexID(t.NativePointer);
             texNative = t;
             io.FontAtlas.ClearTexData();
+
+
+
+
         }
 
         private void SetupKeyMapping(IO io)
@@ -274,7 +286,7 @@ namespace Capture.GUI
             var io = ImGui.GetIO();
             io.DeltaTime = 1f / 20f;
             UpdateImGuiInput(io);
-
+            
             ImGui.Render();
             var data = ImGui.GetDrawData();
             ImGuiRenderDraw(data);
@@ -301,7 +313,6 @@ namespace Capture.GUI
             io.MouseWheel = delta;
             mouseState.Wheel = 0;
         }
-
         private unsafe void ImGuiRenderDraw(DrawData* drawData)
         {
             if (drawData == null)
@@ -316,6 +327,7 @@ namespace Capture.GUI
             vp.Height = (int) io.DisplaySize.Y;
             vp.MinDepth = 0.0f;
             vp.MaxDepth = 1.0f;
+            
             device.Viewport = vp;
             device.PixelShader = null;
             device.VertexShader = null;
@@ -377,9 +389,9 @@ namespace Capture.GUI
                     for (var i = 0; i < cmdList->CmdBuffer.Size; i++)
                     {
                         var pcmd = &((DrawCmd*) cmdList->CmdBuffer.Data)[i];
-
+                        
                         if (pcmd->UserCallback != IntPtr.Zero) throw new NotImplementedException();
-
+                        //Trace.WriteLine(pcmd->TextureId.ToString());
                         device.SetTexture(0, new Texture(pcmd->TextureId));
                         device.ScissorRect = new RectangleF((int) pcmd->ClipRect.X,
                             (int) pcmd->ClipRect.Y,
@@ -404,6 +416,5 @@ namespace Capture.GUI
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
         private delegate IntPtr TWindowProcW([In] IntPtr hWnd, WindowsMessages uMsg, IntPtr wParam, IntPtr lParam);
-        
     }
 }

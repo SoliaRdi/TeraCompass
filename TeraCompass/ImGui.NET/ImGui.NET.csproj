@@ -13,7 +13,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/mellinoe/imgui.net</PackageProjectUrl>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <DocumentationFile Condition="'$(Configuration)' == 'Release'">$(OutputPath)\ImGui.NET.xml</DocumentationFile>
+    <DocumentationFile Condition="'$(Configuration)' == 'Release'"></DocumentationFile>
     <RootNamespace>ImGuiNET</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>sign.pfx</AssemblyOriginatorKeyFile>

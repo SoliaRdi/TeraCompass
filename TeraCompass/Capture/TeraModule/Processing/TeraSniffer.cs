@@ -54,21 +54,18 @@ namespace TeraCompass.Processing
             var servers = BasicTeraData.Instance.Servers;
             _serversByIp = servers.GetServersByIp();
 
-            if (true)
+            var netmasks = _serversByIp.Keys.Select(s => string.Join(".", s.Split('.').Take(3)) + ".0/24").Distinct().ToArray();
+
+            var filter = string.Join(" or ", netmasks.Select(x => $"(net {x})"));
+            filter = "tcp and (" + filter + ")";
+
+            try //fallback to raw sockets if no winpcap available
             {
-                var netmasks = _serversByIp.Keys.Select(s => string.Join(".", s.Split('.').Take(3)) + ".0/24").Distinct().ToArray();
-
-                var filter = string.Join(" or ", netmasks.Select(x => $"(net {x})"));
-                filter = "tcp and (" + filter + ")";
-
-                try //fallback to raw sockets if no winpcap available
-                {
-                    _ipSniffer = new IpSnifferWinPcap(filter);
-                    ((IpSnifferWinPcap) _ipSniffer).Warning += OnWarning;
-                }
-                catch { _ipSniffer = new IpSnifferRawSocketMultipleInterfaces(); }
+                _ipSniffer = new IpSnifferWinPcap(filter);
+                ((IpSnifferWinPcap) _ipSniffer).Warning += OnWarning;
             }
-            else { _ipSniffer = new IpSnifferRawSocketMultipleInterfaces(); }
+            catch { _ipSniffer = new IpSnifferRawSocketMultipleInterfaces(); }
+
 
             var tcpSniffer = new TcpSniffer(_ipSniffer);
             tcpSniffer.NewConnection += HandleNewConnection;

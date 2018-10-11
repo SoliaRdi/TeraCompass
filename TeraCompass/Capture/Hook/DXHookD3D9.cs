@@ -1,72 +1,69 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Capture.GUI;
 using Capture.Interface;
-using SharpDX.Direct3D9;
-using ImGuiNET;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Capture.TeraModule;
-using Capture.TeraModule.CameraFinder;
-using Capture.TeraModule.GameModels;
 using Capture.TeraModule.Processing;
 using Capture.TeraModule.Settings;
-using Capture.TeraModule.ViewModels;
+using ImGuiNET;
 using SharpDX;
+using SharpDX.Direct3D9;
 using TeraCompass.Processing;
-using Vector2 = System.Numerics.Vector2;
-using TeraCompass.Tera.Core;
-using TeraCompass.Tera.Core.Game;
 using Color = System.Drawing.Color;
+using Font = SharpDX.Direct3D9.Font;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Capture.Hook
 {
     internal class DXHookD3D9 : BaseDXHook
     {
+        private const int D3D9_DEVICE_METHOD_COUNT = 119;
+        private const int D3D9Ex_DEVICE_METHOD_COUNT = 15;
+
+        private bool _isUsingPresent;
+        private readonly object _lockRenderTarget = new object();
+
+        private bool _supportsDirect3D9Ex;
+
+        private Hook<Direct3D9Device_EndSceneDelegate> Direct3DDevice_EndSceneHook;
+        private Hook<Direct3D9Device_PresentDelegate> Direct3DDevice_PresentHook;
+        private Hook<Direct3D9Device_ResetDelegate> Direct3DDevice_ResetHook;
+        private Hook<Direct3D9DeviceEx_PresentExDelegate> Direct3DDeviceEx_PresentExHook;
+        private TimeSpan Elapsed = TimeSpan.Zero;
+
+        private List<IntPtr> id3dDeviceFunctionAddresses = new List<IntPtr>();
+
+        public ImGuiRender imGuiRender;
+        private readonly Stopwatch PerfomanseTester = new Stopwatch();
+
+        Sprite _sprite;
+        public static Dictionary<string, Texture> _imageCache = new Dictionary<string, Texture>();
         public DXHookD3D9(CaptureInterface ssInterface)
             : base(ssInterface)
         {
         }
 
-        Hook<Direct3D9Device_EndSceneDelegate> Direct3DDevice_EndSceneHook = null;
-        Hook<Direct3D9Device_ResetDelegate> Direct3DDevice_ResetHook = null;
-        Hook<Direct3D9Device_PresentDelegate> Direct3DDevice_PresentHook = null;
-        Hook<Direct3D9DeviceEx_PresentExDelegate> Direct3DDeviceEx_PresentExHook = null;
-        object _lockRenderTarget = new object();
-        Stopwatch PerfomanseTester = new Stopwatch();
-        private TimeSpan Elapsed = TimeSpan.Zero;
-
-        Query _query;
-        SharpDX.Direct3D9.Font _font;
-
-        Surface _renderTargetCopy;
-        Surface _resolvedTarget;
-
-        public ImGuiRender imGuiRender;
-        
         protected override string HookName => "DXHookD3D9";
-
-        List<IntPtr> id3dDeviceFunctionAddresses = new List<IntPtr>();
-        //List<IntPtr> id3dDeviceExFunctionAddresses = new List<IntPtr>();
-        const int D3D9_DEVICE_METHOD_COUNT = 119;
-        const int D3D9Ex_DEVICE_METHOD_COUNT = 15;
-        bool _supportsDirect3D9Ex = false;
         private Process CurrentProcess { get; set; }
 
         public override void Hook()
         {
-            this.DebugMessage("Hook: Begin");
+            
+            DebugMessage("Hook: Begin");
+            BasicTeraData.Instance = new BasicTeraData(Config.TargetFolder);
             // First we need to determine the function address for IDirect3DDevice9
             id3dDeviceFunctionAddresses = new List<IntPtr>();
-            using (Direct3D d3d = new Direct3D())
+            using (var d3d = new Direct3D())
             {
-                using (var renderForm = new System.Windows.Forms.Form())
+                using (var renderForm = new Form())
                 {
                     Device device;
-                    using (device = new Device(d3d, 0, DeviceType.NullReference, IntPtr.Zero, CreateFlags.HardwareVertexProcessing, new PresentParameters() {BackBufferWidth = 1, BackBufferHeight = 1, DeviceWindowHandle = renderForm.Handle}))
+                    using (device = new Device(d3d, 0, DeviceType.NullReference, IntPtr.Zero, CreateFlags.HardwareVertexProcessing,
+                        new PresentParameters {BackBufferWidth = 1, BackBufferHeight = 1, DeviceWindowHandle = renderForm.Handle}))
                     {
                         id3dDeviceFunctionAddresses.AddRange(GetVTblAddresses(device.NativePointer, D3D9_DEVICE_METHOD_COUNT));
                     }
@@ -75,11 +72,13 @@ namespace Capture.Hook
 
             try
             {
-                using (Direct3DEx d3dEx = new Direct3DEx())
+                using (var d3dEx = new Direct3DEx())
                 {
-                    using (var renderForm = new System.Windows.Forms.Form())
+                    using (var renderForm = new Form())
                     {
-                        using (var deviceEx = new DeviceEx(d3dEx, 0, DeviceType.NullReference, IntPtr.Zero, CreateFlags.HardwareVertexProcessing, new PresentParameters() {BackBufferWidth = 1, BackBufferHeight = 1, DeviceWindowHandle = renderForm.Handle}, new DisplayModeEx() {Width = 800, Height = 600}))
+                        using (var deviceEx = new DeviceEx(d3dEx, 0, DeviceType.NullReference, IntPtr.Zero, CreateFlags.HardwareVertexProcessing,
+                            new PresentParameters {BackBufferWidth = 1, BackBufferHeight = 1, DeviceWindowHandle = renderForm.Handle},
+                            new DisplayModeEx {Width = 800, Height = 600}))
                         {
                             id3dDeviceFunctionAddresses.AddRange(GetVTblAddresses(deviceEx.NativePointer, D3D9_DEVICE_METHOD_COUNT, D3D9Ex_DEVICE_METHOD_COUNT));
                             _supportsDirect3D9Ex = true;
@@ -104,12 +103,10 @@ namespace Capture.Hook
             {
                 // If Direct3D9Ex is available - hook the PresentEx
                 if (_supportsDirect3D9Ex)
-                {
                     Direct3DDeviceEx_PresentExHook = new Hook<Direct3D9DeviceEx_PresentExDelegate>(
                         id3dDeviceFunctionAddresses[(int) Direct3DDevice9ExFunctionOrdinals.PresentEx],
                         new Direct3D9DeviceEx_PresentExDelegate(PresentExHook),
                         this);
-                }
 
                 // Always hook Present also (device will only call Present or PresentEx not both)
                 Direct3DDevice_PresentHook = new Hook<Direct3D9Device_PresentDelegate>(
@@ -147,95 +144,65 @@ namespace Capture.Hook
 
             DebugMessage("Hook: End");
             CurrentProcess = Process.GetProcessById(ProcessId);
-            DebugListener listen = new DebugListener(Interface);
-            Debug.Listeners.Add(listen);
+            TraceListener listen = new DebugListener(Interface);
+            Trace.Listeners.Add(listen);
             Services.Tracker.Configure(Services.CompassSettings).Apply();
             DebugMessage("Settings loaded");
+            
             TeraSniffer.Instance.Enabled = true;
             TeraSniffer.Instance.Warning += DebugMessage;
-            PacketProcessor.Instance.Connected += s => { Debug.Write("Connected"); };
+            PacketProcessor.Instance.Connected += s => { Trace.Write("Connected"); };
         }
 
         /// <summary>
-        /// Just ensures that the surface we created is cleaned up.
+        ///     Just ensures that the surface we created is cleaned up.
         /// </summary>
         public override void Cleanup()
         {
             lock (_lockRenderTarget)
             {
 
-                
-                RemoveAndDispose(ref _renderTargetCopy);
-
-                if(imGuiRender!=null)
+                if (imGuiRender != null)
                     RemoveAndDispose(ref imGuiRender);
-                RemoveAndDispose(ref _resolvedTarget);
-                RemoveAndDispose(ref _query);
-
-
-                RemoveAndDispose(ref _font);
             }
         }
 
-        /// <summary>
-        /// The IDirect3DDevice9.EndScene function definition
-        /// </summary>
-        /// <param name="device"></param>
-        /// <returns></returns>
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        delegate int Direct3D9Device_EndSceneDelegate(IntPtr device);
 
         /// <summary>
-        /// The IDirect3DDevice9.Reset function definition
-        /// </summary>
-        /// <param name="device"></param>
-        /// <param name="presentParameters"></param>
-        /// <returns></returns>
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        delegate int Direct3D9Device_ResetDelegate(IntPtr device, ref PresentParameters presentParameters);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        unsafe delegate int Direct3D9Device_PresentDelegate(IntPtr devicePtr, SharpDX.Rectangle* pSourceRect, SharpDX.Rectangle* pDestRect, IntPtr hDestWindowOverride, IntPtr pDirtyRegion);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        unsafe delegate int Direct3D9DeviceEx_PresentExDelegate(IntPtr devicePtr, SharpDX.Rectangle* pSourceRect, SharpDX.Rectangle* pDestRect, IntPtr hDestWindowOverride, IntPtr pDirtyRegion, Present dwFlags);
-
-        
-        /// <summary>
-        /// Reset the _renderTarget so that we are sure it will have the correct presentation parameters (required to support working across changes to windowed/fullscreen or resolution changes)
+        ///     Reset the _renderTarget so that we are sure it will have the correct presentation parameters (required to support
+        ///     working across changes to windowed/fullscreen or resolution changes)
         /// </summary>
         /// <param name="devicePtr"></param>
         /// <param name="presentParameters"></param>
         /// <returns></returns>
-        int ResetHook(IntPtr devicePtr, ref PresentParameters presentParameters)
+        private int ResetHook(IntPtr devicePtr, ref PresentParameters presentParameters)
         {
             Cleanup();
+            _sprite?.OnLostDevice();
             var hresult = Direct3DDevice_ResetHook.Original(devicePtr, ref presentParameters);
-            var win32error= Result.GetResultFromWin32Error(hresult);
-            if(win32error.Failure)
-                Debug.Write($"{win32error} hresult={hresult}");
-            
+            var win32error = Result.GetResultFromWin32Error(hresult);
+            if (win32error.Failure)
+                Trace.Write($"{win32error} hresult={hresult}");
+
             return hresult;
         }
 
-        bool _isUsingPresent = false;
-
         // Used in the overlay
-        unsafe int PresentExHook(IntPtr devicePtr, SharpDX.Rectangle* pSourceRect, SharpDX.Rectangle* pDestRect, IntPtr hDestWindowOverride, IntPtr pDirtyRegion, Present dwFlags)
+        private unsafe int PresentExHook(IntPtr devicePtr, Rectangle* pSourceRect, Rectangle* pDestRect, IntPtr hDestWindowOverride, IntPtr pDirtyRegion, Present dwFlags)
         {
             _isUsingPresent = true;
-            DeviceEx device = (DeviceEx) devicePtr;
+            var device = (DeviceEx) devicePtr;
 
             DoCaptureRenderTarget(device, "PresentEx");
 
             return Direct3DDeviceEx_PresentExHook.Original(devicePtr, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
         }
 
-        unsafe int PresentHook(IntPtr devicePtr, SharpDX.Rectangle* pSourceRect, SharpDX.Rectangle* pDestRect, IntPtr hDestWindowOverride, IntPtr pDirtyRegion)
+        private unsafe int PresentHook(IntPtr devicePtr, Rectangle* pSourceRect, Rectangle* pDestRect, IntPtr hDestWindowOverride, IntPtr pDirtyRegion)
         {
             _isUsingPresent = true;
 
-            Device device = (Device) devicePtr;
+            var device = (Device) devicePtr;
 
             DoCaptureRenderTarget(device, "PresentHook");
 
@@ -243,14 +210,20 @@ namespace Capture.Hook
         }
 
         /// <summary>
-        /// Hook for IDirect3DDevice9.EndScene
+        ///     Hook for IDirect3DDevice9.EndScene
         /// </summary>
-        /// <param name="devicePtr">Pointer to the IDirect3DDevice9 instance. Note: object member functions always pass "this" as the first parameter.</param>
+        /// <param name="devicePtr">
+        ///     Pointer to the IDirect3DDevice9 instance. Note: object member functions always pass "this" as
+        ///     the first parameter.
+        /// </param>
         /// <returns>The HRESULT of the original EndScene</returns>
-        /// <remarks>Remember that this is called many times a second by the Direct3D application - be mindful of memory and performance!</remarks>
-        int EndSceneHook(IntPtr devicePtr)
+        /// <remarks>
+        ///     Remember that this is called many times a second by the Direct3D application - be mindful of memory and
+        ///     performance!
+        /// </remarks>
+        private int EndSceneHook(IntPtr devicePtr)
         {
-            Device device = (Device) devicePtr;
+            var device = (Device) devicePtr;
 
             if (!_isUsingPresent)
                 DoCaptureRenderTarget(device, "EndSceneHook");
@@ -258,48 +231,54 @@ namespace Capture.Hook
             return Direct3DDevice_EndSceneHook.Original(devicePtr);
         }
 
-
-        
         /// <summary>
-        /// Implementation of capturing from the render target of the Direct3D9 Device (or DeviceEx)
+        ///     Implementation of capturing from the render target of the Direct3D9 Device (or DeviceEx)
         /// </summary>
         /// <param name="device"></param>
-        unsafe void DoCaptureRenderTarget(Device device, string hook)
+        private void DoCaptureRenderTarget(Device device, string hook)
         {
-           
             if (CaptureThisFrame)
+
                 #region CompasRenderLoop
+
                 try
                 {
-                    if (imGuiRender == null && (device != null && device.NativePointer != IntPtr.Zero))
+                    if (imGuiRender == null && device != null && device.NativePointer != IntPtr.Zero)
                     {
-                        Debug.Write("Creating ImGui");
-                        IntPtr handle = CurrentProcess.MainWindowHandle;
-                        NativeMethods.Rect rect = new NativeMethods.Rect();
+                        Trace.Write("Creating ImGui");
+                        var handle = CurrentProcess.MainWindowHandle;
+                        var rect = new NativeMethods.Rect();
                         NativeMethods.GetWindowRect(handle, ref rect);
+                        _sprite = ToDispose(new Sprite(device));
+                        IntialiseElementResources(device);
                         imGuiRender = ToDispose(new ImGuiRender(device, rect, Interface, handle));
+
                     }
-                    else if(imGuiRender!=null)
+                    else if (imGuiRender != null)
                     {
                         if (Services.CompassSettings.ShowFPS)
                         {
                             PerfomanseTester.Reset();
                             PerfomanseTester.Start();
                         }
+                        _sprite.Begin(SpriteFlags.AlphaBlend);
                         imGuiRender.GetNewFrame();
 
                         var CompassViewModel = PacketProcessor.Instance?.CompassViewModel;
-                        CompassViewModel?.Render();
+                        CompassViewModel?.Render(_sprite);
 
                         //if (UIState.SettingsOpened)
                         //    ImGuiNative.igShowDemoWindow(ref UIState.OverlayOpened);
                         if (Services.CompassSettings.ShowFPS)
                         {
                             var draw_list = ImGui.GetOverlayDrawList();
-                            draw_list.AddText(new Vector2(10,10), $"PerfomanseTester = {Elapsed}", Color.Red.ToDx9ARGB());
+                            draw_list.AddText(new Vector2(10, 100), $"RenderingTime(ms) = {Elapsed.Milliseconds}", Color.Red.ToDx9ARGB());
+                            //bool r=true;
+                            //    ImGuiNative.igShowDemoWindow(ref r);
                         }
-                            
+
                         imGuiRender.Draw();
+                        _sprite.End();
                         if (Services.CompassSettings.ShowFPS && PerfomanseTester.IsRunning)
                         {
                             PerfomanseTester.Stop();
@@ -314,5 +293,52 @@ namespace Capture.Hook
 
             #endregion
         }
+        private void IntialiseElementResources(Device device)
+        {
+            foreach (var image in BasicTeraData.Instance.Icons)
+            {
+               GetImageForImageElement(image,device);
+            }
+        }
+        Texture GetImageForImageElement(ImageElement element,Device device)
+        {
+            Texture result = null;
+
+            if (!String.IsNullOrEmpty(element.Filename))
+            {
+                var path = Path.GetFileName(element.Filename);
+                if (!_imageCache.TryGetValue(path, out result))
+                {
+                    result = ToDispose(SharpDX.Direct3D9.Texture.FromFile(device, element.Filename));
+
+                    _imageCache[path] = result;
+                }
+            }
+            return result;
+        }
+        /// <summary>
+        ///     The IDirect3DDevice9.EndScene function definition
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+        private delegate int Direct3D9Device_EndSceneDelegate(IntPtr device);
+
+        /// <summary>
+        ///     The IDirect3DDevice9.Reset function definition
+        /// </summary>
+        /// <param name="device"></param>
+        /// <param name="presentParameters"></param>
+        /// <returns></returns>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+        private delegate int Direct3D9Device_ResetDelegate(IntPtr device, ref PresentParameters presentParameters);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+        private unsafe delegate int Direct3D9Device_PresentDelegate(IntPtr devicePtr, Rectangle* pSourceRect, Rectangle* pDestRect, IntPtr hDestWindowOverride,
+            IntPtr pDirtyRegion);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+        private unsafe delegate int Direct3D9DeviceEx_PresentExDelegate(IntPtr devicePtr, Rectangle* pSourceRect, Rectangle* pDestRect, IntPtr hDestWindowOverride,
+            IntPtr pDirtyRegion, Present dwFlags);
     }
 }

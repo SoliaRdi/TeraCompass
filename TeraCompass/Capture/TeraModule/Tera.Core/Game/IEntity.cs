@@ -14,7 +14,7 @@
         Entity RootOwner { get; }
         int Speed { get; set; }
         long StartTime { get; set; }
-
+        int Status { get; set; }
         bool Equals(Entity other);
         bool Equals(object obj);
         int GetHashCode();

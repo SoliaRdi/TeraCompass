@@ -92,7 +92,7 @@ namespace TeraCompass.NetworkSniffer
                 _bufferedPackets.Remove(firstBufferedPosition);
 
                 var alreadyReceivedBytes = BytesReceived - firstBufferedPosition;
-                Debug.Assert(alreadyReceivedBytes >= 0);
+                Trace.Assert(alreadyReceivedBytes >= 0);
 
                 if (alreadyReceivedBytes > dataArray.Length) { continue; }
                 var count = dataArray.Length - alreadyReceivedBytes;

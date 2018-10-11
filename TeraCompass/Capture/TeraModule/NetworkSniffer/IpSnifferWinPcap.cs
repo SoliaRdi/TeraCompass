@@ -54,7 +54,7 @@ namespace TeraCompass.NetworkSniffer
 
         private void Start()
         {
-            Debug.Assert(_devices == null);
+            Trace.Assert(_devices == null);
             _devices = WinPcapDeviceList.New();
             var interestingDevices = _devices.Where(IsInteresting);
             foreach (var device in interestingDevices)
@@ -80,7 +80,7 @@ namespace TeraCompass.NetworkSniffer
 
         private void Finish()
         {
-            Debug.Assert(_devices != null);
+            Trace.Assert(_devices != null);
             foreach (var device in _devices.Where(device => device.Opened))
             {
                 try { device.StopCapture(); }

@@ -10,7 +10,7 @@ namespace TeraCompass.Processing
         public static void DownloadIfNotExist(uint version, String directory)
         {
             var res = DownloadOpcode(version, directory);
-            if (res) Debug.WriteLine("Updated opcodes: " + version);
+            if (res) Trace.WriteLine("Updated opcodes: " + version);
         }
 
         private static bool DownloadOpcode(uint version, String directory)

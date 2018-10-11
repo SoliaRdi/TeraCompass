@@ -130,11 +130,11 @@ namespace TeraCompass.ViewModels
                     ShowOverlay = false,
                     TargetFramesPerSecond = 6
                 };
-                var path = Path.Combine(Path.GetDirectoryName(process.MainModule.FileName), "resources", "data");
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-                if (!File.Exists(Path.Combine(path, "servers.txt")))
-                    File.Copy("servers.txt", Path.Combine(path, "servers.txt"));
+                //var path = Path.Combine(Path.GetDirectoryName(process.MainModule.FileName), "resources", "data");
+                //if (!Directory.Exists(path))
+                //    Directory.CreateDirectory(path);
+                //if (!File.Exists(Path.Combine(path, "servers.txt")))
+                //    File.Copy("servers.txt", Path.Combine(path, "servers.txt"));
                 var captureInterface = new CaptureInterface();
                 captureInterface.RemoteMessage += e => { LogEvent(e.Message);};
                 _captureProcess = new CaptureProcess(process, cc, captureInterface);

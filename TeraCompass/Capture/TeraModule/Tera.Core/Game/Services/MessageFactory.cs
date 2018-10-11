@@ -6,7 +6,7 @@ using TeraCompass.Processing.Packets;
 using TeraCompass.Tera.Core.Game.Messages;
 using TeraCompass.Tera.Core.Game.Messages.Client;
 using TeraCompass.Tera.Core.Game.Messages.Server;
-using C_CHECK_VERSION = TeraCompass.Tera.Core.Game.Messages.Client.C_CHECK_VERSION;
+
 using C_LOGIN_ARBITER = TeraCompass.Tera.Core.Game.Messages.Client.C_LOGIN_ARBITER;
 
 namespace TeraCompass.Tera.Core.Game.Services
@@ -20,7 +20,6 @@ namespace TeraCompass.Tera.Core.Game.Services
         private static readonly Dictionary<ushort, Delegate> OpcodeNameToType = new Dictionary<ushort, Delegate> {{ 19900, Helpers.Contructor<Func<TeraMessageReader, C_CHECK_VERSION>>() } };
         private static readonly Dictionary<string, Delegate> CoreServices = new Dictionary<string, Delegate>
         {
-            {"C_CHECK_VERSION", Helpers.Contructor<Func<TeraMessageReader,C_CHECK_VERSION>>()},
             {"C_LOGIN_ARBITER", Helpers.Contructor<Func<TeraMessageReader,C_LOGIN_ARBITER>>()},
             {"S_SPAWN_USER", Helpers.Contructor<Func<TeraMessageReader,SpawnUserServerMessage>>()},
             {"S_SPAWN_ME", Helpers.Contructor<Func<TeraMessageReader,SpawnMeServerMessage>>()},
@@ -31,6 +30,9 @@ namespace TeraCompass.Tera.Core.Game.Services
             {"C_PLAYER_LOCATION", Helpers.Contructor<Func<TeraMessageReader,C_PLAYER_LOCATION>>()},
             {"C_PLAYER_FLYING_LOCATION", Helpers.Contructor<Func<TeraMessageReader,C_PLAYER_FLYING_LOCATION>>()},
             {"S_CHANGE_RELATION", Helpers.Contructor<Func<TeraMessageReader,S_CHANGE_RELATION>>()},
+            {"S_DEAD_LOCATION", Helpers.Contructor<Func<TeraMessageReader,S_DEAD_LOCATION>>()},
+            {"S_CREATURE_LIFE", Helpers.Contructor<Func<TeraMessageReader,SCreatureLife>>()},
+            { "S_USER_STATUS", Helpers.Contructor<Func<TeraMessageReader,SUserStatus>>()},
         };
 
 
@@ -39,20 +41,8 @@ namespace TeraCompass.Tera.Core.Game.Services
         public string Region;
         public uint Version;
         public int ReleaseVersion;
-        public bool ChatEnabled {
-            get { return _chatEnabled; }
-            set
-            {
-                _chatEnabled = value;
-                if (OpcodeNameToType.Count==1) return;
-                OpcodeNameToType.Clear();
-                CoreServices.ToList().ForEach(x => OpcodeNameToType[_opCodeNamer.GetCode(x.Key)] = x.Value);
-            }
-        }
 
-        private bool _chatEnabled;
-
-        public MessageFactory(OpCodeNamer opCodeNamer, string region, uint version, bool chatEnabled=false, OpCodeNamer sysMsgNamer=null)
+        public MessageFactory(OpCodeNamer opCodeNamer, string region, uint version, OpCodeNamer sysMsgNamer=null)
         {
             _opCodeNamer = opCodeNamer;
             _sysMsgNamer = sysMsgNamer;
@@ -61,23 +51,15 @@ namespace TeraCompass.Tera.Core.Game.Services
             OpcodeNameToType[0] = UnknownMessageDelegate;
             Version = version;
             Region = region;
-            _chatEnabled = chatEnabled;
         }
 
         public void ReloadSysMsg() { _sysMsgNamer?.Reload(Version, ReleaseVersion); }
 
-        public MessageFactory()
-        {
-            _opCodeNamer = new OpCodeNamer(new Dictionary<ushort,string>{{19900 , "C_CHECK_VERSION" }} );
-            Version = 0;
-            Region = "Unknown";
-        }
+        public MessageFactory() {}
 
         private ParsedMessage Instantiate(ushort opCode, TeraMessageReader reader)
         {
-            Delegate type;
-            
-            if (!OpcodeNameToType.TryGetValue(opCode, out type))
+            if (!OpcodeNameToType.TryGetValue(opCode, out var type))
                 type = UnknownMessageDelegate;
             return (ParsedMessage) type.DynamicInvoke(reader);
         }

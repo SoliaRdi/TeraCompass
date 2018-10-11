@@ -14,7 +14,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             SourceId = reader.ReadEntityId();
             Critical = reader.ReadByte();
             AbnormalId = reader.ReadInt32();
-            //Debug.WriteLine("target = " + TargetId + ";Source:" + SourceId + ";Critical:" + Critical + ";Hp left:" + HpRemaining + ";Max HP:" + TotalHp+";HpLost/Gain:"+ HpChange + ";Type:"+ Type + ";dot:"+AbnormalId);
+            //Trace.WriteLine("target = " + TargetId + ";Source:" + SourceId + ";Critical:" + Critical + ";Hp left:" + HpRemaining + ";Max HP:" + TotalHp+";HpLost/Gain:"+ HpChange + ";Type:"+ Type + ";dot:"+AbnormalId);
         }
 
         public int Unknow3 { get; }

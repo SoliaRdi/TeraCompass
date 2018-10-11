@@ -12,10 +12,10 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
 
             //Type? 6 = reset? 
             var typeId = reader.ReadUInt32();
-           // Debug.WriteLine("Crest type id:" + typeId);
+           // Trace.WriteLine("Crest type id:" + typeId);
             Type = (CrestType)typeId;
             SkillId = reader.ReadInt32() & 0x3FFFFFF;
-          //  Debug.WriteLine("Crest :" + Type + ";Skill Id "+SkillId);
+          //  Trace.WriteLine("Crest :" + Type + ";Skill Id "+SkillId);
 
         }
 

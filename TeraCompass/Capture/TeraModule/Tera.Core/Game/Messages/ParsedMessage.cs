@@ -20,8 +20,8 @@ namespace TeraCompass.Tera.Core.Game.Messages
 
         public void PrintRaw()
         {
-            Debug.WriteLine(OpCodeName + " : " + OpCode + " : " + Direction + " : Size " + Payload.Count + " : Time " + Time);
-            Debug.WriteLine(BitConverter.ToString(Payload.Array));
+            Trace.WriteLine(OpCodeName + " : " + OpCode + " : " + Direction + " : Size " + Payload.Count + " : Time " + Time);
+            Trace.WriteLine(BitConverter.ToString(Payload.Array));
         }
     }
 }

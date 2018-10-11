@@ -49,7 +49,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Position = reader.ReadVector3f();
             Heading = reader.ReadAngle();
             //if (Position.X!=0)
-            //    Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Target.Id))} {SkillId} {Position} {Heading}");
+            //    Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Target.Id))} {SkillId} {Position} {Heading}");
         }
 
         //DEBUG

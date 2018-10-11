@@ -27,7 +27,7 @@ namespace TeraCompass.NetworkSniffer
 
         private void Init()
         {
-            Debug.Assert(_socket == null);
+            Trace.Assert(_socket == null);
             if (_isInit) { return; }
             try
             {
@@ -68,7 +68,7 @@ namespace TeraCompass.NetworkSniffer
 
         private void Finish()
         {
-            Debug.Assert(_socket != null);
+            Trace.Assert(_socket != null);
             _isInit = false;
         }
 

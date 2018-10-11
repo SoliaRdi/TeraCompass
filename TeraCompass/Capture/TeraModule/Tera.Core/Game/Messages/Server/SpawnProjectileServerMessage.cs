@@ -17,7 +17,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             OwnerId = reader.ReadEntityId();
             unk2 = reader.ReadInt16(); // ???
             //PrintRaw();
-            //Debug.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Id.Id))} {Start} - > {Finish} {Speed}");
+            //Trace.WriteLine($"{Time.Ticks} {BitConverter.ToString(BitConverter.GetBytes(Id.Id))} {Start} - > {Finish} {Speed}");
         }
 
         public float Speed { get; set; }

@@ -23,7 +23,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                 PlayerName = "Error parsing S_BEGIN_THROUGH_ARBITER_CONTRACT: " + BitConverter.ToString(Raw);
             }
 
-            //Debug.WriteLine("InviteName:" + InviteName + " PlayerName:" + PlayerName);
+            //Trace.WriteLine("InviteName:" + InviteName + " PlayerName:" + PlayerName);
         }
 
         public string InviteName { get; set; }

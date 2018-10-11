@@ -22,7 +22,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                 i = i + 2;
             }
             //todo add various strsheet_*.xml to reconstruct game message as it seen by user (if needed?)
-            Debug.WriteLine(MsgType + ":   "+string.Join(";\t",Parameters.Select(x=>x.Key+": "+x.Value)));
+            Trace.WriteLine(MsgType + ":   "+string.Join(";\t",Parameters.Select(x=>x.Key+": "+x.Value)));
         }
 
         public string RawMessage { get; private set; }

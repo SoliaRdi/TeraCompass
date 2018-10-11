@@ -21,7 +21,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             ;
             //foreach (var Glyph in Glyphs)
             //{
-            //    Debug.WriteLine($"Glyphid:{Glyph.Key} : "+ (Glyph.Value?"Enabled":"Disabled"));
+            //    Trace.WriteLine($"Glyphid:{Glyph.Key} : "+ (Glyph.Value?"Enabled":"Disabled"));
             //}
         }
 

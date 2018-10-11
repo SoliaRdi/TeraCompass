@@ -130,7 +130,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             {
                 reader.BaseStream.Position = questOffset - 4;
                 var pointer = reader.ReadUInt16();
-                Debug.Assert(pointer == questOffset);//should be the same
+                Trace.Assert(pointer == questOffset);//should be the same
                 var nextOffset = reader.ReadUInt16();
 
                 var countTargets = reader.ReadUInt16();
@@ -152,7 +152,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                 var unk3 = reader.ReadInt32(); //2 if rally
                 var totalTime = reader.ReadInt32();
                 var active = reader.ReadInt32(); //0=not taken, 1= in progress, 2=completed
-                //Debug.WriteLine(active.ToString("X"));
+                //Trace.WriteLine(active.ToString("X"));
                 var activeBool = active == 1;
                 
                 //in seconds
@@ -166,7 +166,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                 var guildQuestDescriptionLabel = reader.ReadTeraString();
                 var guildQuestTitleLabel = reader.ReadTeraString();
                 var questguildname = reader.ReadTeraString();
-                //Debug.WriteLine(
+                //Trace.WriteLine(
                 // ";unk3:" + unk3 +
                 // ";unk4:" + unk4 +
                 // ";unk5:" + unk5.ToString("X") +
@@ -194,7 +194,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                     reader.BaseStream.Position = nextUnk2Offset - 4;
                     var currentPosition = reader.ReadUInt16();
                     nextUnk2Offset = reader.ReadUInt16();
-                    Debug.WriteLine("unk2:" + reader.ReadByte().ToString("X") + " ;" + j + "/" + countUnk2);
+                    Trace.WriteLine("unk2:" + reader.ReadByte().ToString("X") + " ;" + j + "/" + countUnk2);
                 }
 
                 List<GuildQuestItem> rewards = new List<GuildQuestItem>();
@@ -228,7 +228,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
              
             }
 
-           // Debug.WriteLine(ToString());
+           // Trace.WriteLine(ToString());
         }
 
     }

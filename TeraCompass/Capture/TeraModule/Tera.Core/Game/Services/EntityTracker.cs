@@ -85,6 +85,11 @@ namespace TeraCompass.Tera.Core.Game.Services
                 entity.Position = m.Position;
                 entity.Dead = m.Dead;
                 OnEntityUpdated(entity);
+            }else if (m.User == CompassUser.Id)
+            {
+                CompassUser.Position = m.Position;
+                CompassUser.Dead = m.Dead;
+                OnEntityUpdated(CompassUser);
             }
             
         }
@@ -135,6 +140,20 @@ namespace TeraCompass.Tera.Core.Game.Services
             CompassUser.Position = m.Position;
             OnEntitysCleared(CompassUser);
         }
+        public void Update(SUserStatus m)
+        {
+            var entity = GetOrNull(m.User);
+            if (entity != null)
+            {
+                entity.Status = m.Status;
+                OnEntityUpdated(entity);
+            }
+            else if (m.User == CompassUser.Id)
+            {
+                CompassUser.Status = m.Status;
+                OnEntityUpdated(CompassUser);
+            }
+        }
         /** Easy integrate style - compatible */
 
         public void Update(ParsedMessage message)
@@ -151,6 +170,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             message.On<S_CHANGE_RELATION>(Update);
             message.On<SCreatureLife>(Update);
             message.On<S_DEAD_LOCATION>(Update);
+            message.On<SUserStatus>(Update); 
         }
 
         private Entity LoginMe(LoginServerMessage m)

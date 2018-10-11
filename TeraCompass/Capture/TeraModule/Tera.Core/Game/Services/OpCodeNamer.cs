@@ -56,7 +56,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             ushort code;
             if (_opCodeCodes.TryGetValue(name, out code))
                 return code;
-            Debug.WriteLine("Missing opcode: " + name);
+            Trace.WriteLine("Missing opcode: " + name);
             return 0;
             //throw new ArgumentException($"Unknown name '{name}'");
         }
