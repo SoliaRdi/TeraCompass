@@ -41,7 +41,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Client
                     return;
                 }
                 var opCodeNamer = new OpCodeNamer(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/{Versions[0]}.txt"));
-                var sysMsgNamer = new OpCodeNamer(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/smt_{Versions[0]}.txt"));
+                OpCodeNamer sysMsgNamer = null; //new OpCodeNamer(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/smt_{Versions[0]}.txt"));
                 TeraSniffer.Instance.Connected = true;
                 PacketProcessor.Instance.MessageFactory = new MessageFactory(opCodeNamer, PacketProcessor.Instance.Server.Region, Versions[0], sysMsgNamer);
 

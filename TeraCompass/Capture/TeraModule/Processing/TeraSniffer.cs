@@ -14,16 +14,20 @@ using TeraCompass.Tera.Core.Sniffing;
 
 namespace TeraCompass.Processing
 {
-    public class TeraSniffer : ITeraSniffer
+    public sealed class TeraSniffer : ITeraSniffer
     {
-        private static TeraSniffer _instance;
+        public static TeraSniffer Instance { get; set; }
 
+        static TeraSniffer()
+        {
+            Instance = new TeraSniffer();
+        }
         // Only take this lock in callbacks from tcp sniffing, not in code that can be called by the user.
         // Otherwise this could cause a deadlock if the user calls such a method from a callback that already holds a lock
         //private readonly object _eventLock = new object();
         private readonly IpSniffer _ipSniffer;
 
-        private readonly ConcurrentDictionary<TcpConnection, byte> _isNew = new ConcurrentDictionary<TcpConnection, byte>();
+        private ConcurrentDictionary<TcpConnection, byte> _isNew { get; set; }
 
         private readonly Dictionary<string, Server> _serversByIp;
         private TcpConnection _clientToServer;
@@ -44,7 +48,7 @@ namespace TeraCompass.Processing
             }
         }
     
-        public ConcurrentQueue<Message> Packets = new ConcurrentQueue<Message>();
+        public ConcurrentQueue<Message> Packets { get; set; }
         private Queue<Message> PacketsCopyStorage;
 
         public int ServerProxyOverhead;
@@ -52,6 +56,8 @@ namespace TeraCompass.Processing
         private TeraSniffer()
         {
             var servers = BasicTeraData.Instance.Servers;
+            Packets = new ConcurrentQueue<Message>();
+            _isNew = new ConcurrentDictionary<TcpConnection, byte>();
             _serversByIp = servers.GetServersByIp();
 
             var netmasks = _serversByIp.Keys.Select(s => string.Join(".", s.Split('.').Take(3)) + ".0/24").Distinct().ToArray();
@@ -70,10 +76,11 @@ namespace TeraCompass.Processing
             var tcpSniffer = new TcpSniffer(_ipSniffer);
             tcpSniffer.NewConnection += HandleNewConnection;
             tcpSniffer.EndConnection += HandleEndConnection;
+            
         }
 
 
-        public static TeraSniffer Instance => _instance ?? (_instance = new TeraSniffer());
+       
 
         // IpSniffer has its own locking, so we need no lock here.
         public bool Enabled
@@ -87,20 +94,20 @@ namespace TeraCompass.Processing
         public event Action EndConnection;
         public event Action<string> Warning;
 
-        protected virtual void OnNewConnection(Server server)
+        private void OnNewConnection(Server server)
         {
             PacketsCopyStorage = EnableMessageStorage ? new Queue<Message>() : null;
             var handler = NewConnection;
             handler?.Invoke(server);
         }
 
-        protected virtual void OnEndConnection()
+        private void OnEndConnection()
         {
             var handler = EndConnection;
             handler?.Invoke();
         }
 
-        protected virtual void OnMessageReceived(Message message)
+        private void OnMessageReceived(Message message)
         {
             Packets.Enqueue(message);
             PacketsCopyStorage?.Enqueue(message);
@@ -126,7 +133,7 @@ namespace TeraCompass.Processing
             return tmp;
         }
 
-        protected virtual void OnWarning(string obj)
+        private void OnWarning(string obj)
         {
             var handler = Warning;
             handler?.Invoke(obj);

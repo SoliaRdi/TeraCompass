@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,6 +17,7 @@ using SharpDX.Direct3D9;
 using TeraCompass.Processing;
 using Color = System.Drawing.Color;
 using Font = SharpDX.Direct3D9.Font;
+using Rectangle = SharpDX.Rectangle;
 using Vector2 = System.Numerics.Vector2;
 
 namespace Capture.Hook
@@ -52,9 +55,15 @@ namespace Capture.Hook
 
         public override void Hook()
         {
-            
+            CurrentProcess = Process.GetProcessById(ProcessId);
+            TraceListener listen = new DebugListener(Interface);
+            Trace.Listeners.Add(listen);
+            Services.Tracker.Configure(Services.CompassSettings).Apply();
+            DebugMessage("Settings loaded");
+
+           
             DebugMessage("Hook: Begin");
-            BasicTeraData.Instance = new BasicTeraData(Config.TargetFolder);
+
             // First we need to determine the function address for IDirect3DDevice9
             id3dDeviceFunctionAddresses = new List<IntPtr>();
             using (var d3d = new Direct3D())
@@ -143,15 +152,9 @@ namespace Capture.Hook
             Hooks.Add(Direct3DDevice_ResetHook);
 
             DebugMessage("Hook: End");
-            CurrentProcess = Process.GetProcessById(ProcessId);
-            TraceListener listen = new DebugListener(Interface);
-            Trace.Listeners.Add(listen);
-            Services.Tracker.Configure(Services.CompassSettings).Apply();
-            DebugMessage("Settings loaded");
+
             
-            TeraSniffer.Instance.Enabled = true;
-            TeraSniffer.Instance.Warning += DebugMessage;
-            PacketProcessor.Instance.Connected += s => { Trace.Write("Connected"); };
+
         }
 
         /// <summary>
@@ -273,6 +276,8 @@ namespace Capture.Hook
                         {
                             var draw_list = ImGui.GetOverlayDrawList();
                             draw_list.AddText(new Vector2(10, 100), $"RenderingTime(ms) = {Elapsed.Milliseconds}", Color.Red.ToDx9ARGB());
+                            draw_list.AddImageRounded((IntPtr)_imageCache["incombat.png"], new Vector2(64, 64), new Vector2(100, 100), new Vector2(100, 100), Vector2.One,
+                                Color.Red.ToDx9ARGB(),2, 4);
                             //bool r=true;
                             //    ImGuiNative.igShowDemoWindow(ref r);
                         }
@@ -300,21 +305,18 @@ namespace Capture.Hook
                GetImageForImageElement(image,device);
             }
         }
-        Texture GetImageForImageElement(ImageElement element,Device device)
+      unsafe void GetImageForImageElement(ImageElement element, Device device)
         {
-            Texture result = null;
-
-            if (!String.IsNullOrEmpty(element.Filename))
+            if (!string.IsNullOrEmpty(element.Filename))
             {
                 var path = Path.GetFileName(element.Filename);
-                if (!_imageCache.TryGetValue(path, out result))
+                if (!_imageCache.TryGetValue(path, out var tex))
                 {
-                    result = ToDispose(SharpDX.Direct3D9.Texture.FromFile(device, element.Filename));
-
-                    _imageCache[path] = result;
+                    tex = ToDispose(Texture.FromFile(device, element.Filename));
+                   
+                    _imageCache[path] = tex;
                 }
             }
-            return result;
         }
         /// <summary>
         ///     The IDirect3DDevice9.EndScene function definition

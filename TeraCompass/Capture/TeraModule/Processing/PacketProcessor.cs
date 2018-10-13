@@ -14,12 +14,11 @@ namespace Capture.TeraModule.Processing
 {
     public sealed class PacketProcessor
     {
+        static PacketProcessor()
+        {
+            Instance = new PacketProcessor();
+        }
         public delegate void ConnectedHandler(string serverName);
-
-        public delegate void GuildIconEvent(Bitmap icon);
-
-
-        private static PacketProcessor _instance;
 
         public CompassViewModel CompassViewModel { get; internal set; }
         private bool _keepAlive = true;
@@ -45,7 +44,7 @@ namespace Capture.TeraModule.Processing
 
 
 
-        public static PacketProcessor Instance => _instance ?? (_instance = new PacketProcessor());
+        public static PacketProcessor Instance { get; set; }
 
         public EntityTracker EntityTracker { get; internal set; }
 

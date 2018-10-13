@@ -138,7 +138,7 @@ namespace TeraCompass.ViewModels
                 var captureInterface = new CaptureInterface();
                 captureInterface.RemoteMessage += e => { LogEvent(e.Message);};
                 _captureProcess = new CaptureProcess(process, cc, captureInterface);
-                LogEvent("Compass initialized...");
+                //LogEvent("Compass initialized...");
             }
             else
             {

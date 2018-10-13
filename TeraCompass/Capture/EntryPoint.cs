@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Capture.Hook;
 using Capture.Interface;
 using System.Threading.Tasks;
 using System.Runtime.Remoting.Channels.Ipc;
+using Capture.TeraModule.Processing;
 using Capture.TeraModule.Settings;
+using TeraCompass.Processing;
 
 namespace Capture
 {
@@ -62,12 +65,14 @@ namespace Capture
 
             // NOTE: This is running in the target process
             _interface.Message(MessageType.Information, "Injected into process Id:{0}.", EasyHook.RemoteHooking.GetCurrentProcessId());
-
+            
             _runWait = new System.Threading.ManualResetEvent(false);
             _runWait.Reset();
             try
             {
-                
+                BasicTeraData.Instance = new BasicTeraData(config.TargetFolder);
+                TeraSniffer.Instance.Enabled = true;
+                PacketProcessor.Instance.Connected += s => { _interface.Message(MessageType.Information, "Connected."); };
                 // Initialise the Hook
                 if (!InitialiseDirectXHook(config))
                 {

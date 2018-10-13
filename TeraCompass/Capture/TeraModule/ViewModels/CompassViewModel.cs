@@ -199,7 +199,7 @@ namespace Capture.TeraModule.ViewModels
             ImGui.EndWindow();
             if (PacketProcessor.Instance.EntityTracker.CompassUser.Status==1&&DXHookD3D9._imageCache.TryGetValue("incombat.png", out var texture))
                 sprite.Draw(texture,new SharpDX.Mathematics.Interop.RawColorBGRA(255,255,255,255),null,null,
-                    new SharpDX.Mathematics.Interop.RawVector3(window_pos.X+window_size.X,window_pos.Y,0));
+                    new SharpDX.Mathematics.Interop.RawVector3(window_pos.X+window_size.X-32,window_pos.Y+window_size.Y-64,0));
             if (PlayerModels.Count > 0)
                 if (Services.CompassSettings.StatisticsOpened)
                 {

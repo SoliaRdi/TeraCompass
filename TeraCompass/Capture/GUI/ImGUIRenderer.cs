@@ -200,7 +200,7 @@ namespace Capture.GUI
             return (correctedVKey);
         }
 
-        private static unsafe void memcpy(void* dst, void* src, int count)
+        public static unsafe void memcpy(void* dst, void* src, int count)
         {
             const int blockSize = 4096;
             var block = new byte[blockSize];
@@ -231,7 +231,7 @@ namespace Capture.GUI
             var t = new Texture(device, texDataAsRgba32.Width, texDataAsRgba32.Height, 1, Usage.Dynamic,
                 Format.A8R8G8B8, Pool.Default);
             var rect = t.LockRectangle(0, LockFlags.None);
-
+            
             for (var y = 0; y < texDataAsRgba32.Height; y++)
                 memcpy((byte*) (rect.DataPointer + rect.Pitch * y),
                     texDataAsRgba32.Pixels + texDataAsRgba32.Width * texDataAsRgba32.BytesPerPixel * y,

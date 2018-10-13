@@ -137,6 +137,34 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="resources\data\opcodes\protocol.333785.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="resources\data\opcodes\protocol.334245.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="resources\data\opcodes\protocol.335640.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="resources\data\opcodes\protocol.336874.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="resources\data\opcodes\sysmsg.334245.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="resources\data\opcodes\sysmsg.71.map" />
+    <None Include="resources\data\opcodes\sysmsg.72.map" />
+    <None Include="resources\data\opcodes\sysmsg.74.map" />
+    <None Include="resources\data\sys_msg\sys_msg-EU-EN.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-EU-FR.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-EU-GER.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-JP.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-KR-PTS.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-KR.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-NA.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-RU.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-THA.tsv" />
+    <None Include="resources\data\sys_msg\sys_msg-TW.tsv" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -160,7 +188,10 @@
     <Content Include="EasyLoad64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="servers.txt">
+    <Resource Include="resources\icons\incombat.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="resources\data\servers.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Views\icon.ico" />
@@ -183,5 +214,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

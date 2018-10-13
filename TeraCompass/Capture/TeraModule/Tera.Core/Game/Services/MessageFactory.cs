@@ -20,6 +20,7 @@ namespace TeraCompass.Tera.Core.Game.Services
         private static readonly Dictionary<ushort, Delegate> OpcodeNameToType = new Dictionary<ushort, Delegate> {{ 19900, Helpers.Contructor<Func<TeraMessageReader, C_CHECK_VERSION>>() } };
         private static readonly Dictionary<string, Delegate> CoreServices = new Dictionary<string, Delegate>
         {
+            {"C_CHECK_VERSION", Helpers.Contructor<Func<TeraMessageReader,C_CHECK_VERSION>>()},
             {"C_LOGIN_ARBITER", Helpers.Contructor<Func<TeraMessageReader,C_LOGIN_ARBITER>>()},
             {"S_SPAWN_USER", Helpers.Contructor<Func<TeraMessageReader,SpawnUserServerMessage>>()},
             {"S_SPAWN_ME", Helpers.Contructor<Func<TeraMessageReader,SpawnMeServerMessage>>()},
@@ -55,7 +56,12 @@ namespace TeraCompass.Tera.Core.Game.Services
 
         public void ReloadSysMsg() { _sysMsgNamer?.Reload(Version, ReleaseVersion); }
 
-        public MessageFactory() {}
+        public MessageFactory()
+        {
+            _opCodeNamer = new OpCodeNamer(new Dictionary<ushort, string> { { 19900, "C_CHECK_VERSION" } });
+            Version = 0;
+            Region = "Unknown";
+        }
 
         private ParsedMessage Instantiate(ushort opCode, TeraMessageReader reader)
         {
