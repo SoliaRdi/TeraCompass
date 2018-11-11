@@ -33,6 +33,7 @@ namespace Capture.TeraModule.Processing
             { typeof(SCreatureLife), new Action<SCreatureLife>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             { typeof(S_DEAD_LOCATION), new Action<S_DEAD_LOCATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             { typeof(SUserStatus), new Action<SUserStatus>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+            { typeof(S_RETURN_TO_LOBBY), new Action<S_RETURN_TO_LOBBY>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
         };
 
         public bool Process(ParsedMessage message)

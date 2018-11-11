@@ -66,9 +66,13 @@ namespace ImGuiNET
             return ImGuiNative.igGetIDStrRange(idBegin, idEnd);
         }
 
-        public static void Text(string message)
+        public static unsafe void Text(string message)
         {
-            ImGuiNative.igText(message);
+            fixed (byte* bytes = System.Text.Encoding.UTF8.GetBytes(message))
+            {
+                ImGuiNative.igText(bytes);
+            }
+            
         }
 
         public static void Text(string message, Vector4 color)

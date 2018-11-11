@@ -240,6 +240,7 @@ namespace Capture.Hook
         /// <param name="device"></param>
         private void DoCaptureRenderTarget(Device device, string hook)
         {
+            FPS.Frame();
             if (CaptureThisFrame)
 
                 #region CompasRenderLoop
@@ -254,37 +255,40 @@ namespace Capture.Hook
                         NativeMethods.GetWindowRect(handle, ref rect);
                         _sprite = ToDispose(new Sprite(device));
                         IntialiseElementResources(device);
-                        imGuiRender = ToDispose(new ImGuiRender(device, rect, Interface, handle));
+                        imGuiRender = ToDispose(new ImGuiRender(device, rect, Interface, CurrentProcess));
 
                     }
                     else if (imGuiRender != null)
                     {
-                        if (Services.CompassSettings.ShowFPS)
+                        if (Services.CompassSettings.ShowRenderTime)
                         {
                             PerfomanseTester.Reset();
                             PerfomanseTester.Start();
                         }
+
                         _sprite.Begin(SpriteFlags.AlphaBlend);
                         imGuiRender.GetNewFrame();
 
                         var CompassViewModel = PacketProcessor.Instance?.CompassViewModel;
                         CompassViewModel?.Render(_sprite);
 
-                        //if (UIState.SettingsOpened)
-                        //    ImGuiNative.igShowDemoWindow(ref UIState.OverlayOpened);
-                        if (Services.CompassSettings.ShowFPS)
+                        if (Services.CompassSettings.ShowRenderTime)
                         {
                             var draw_list = ImGui.GetOverlayDrawList();
                             draw_list.AddText(new Vector2(10, 100), $"RenderingTime(ms) = {Elapsed.Milliseconds}", Color.Red.ToDx9ARGB());
-                            draw_list.AddImageRounded((IntPtr)_imageCache["incombat.png"], new Vector2(64, 64), new Vector2(100, 100), new Vector2(100, 100), Vector2.One,
-                                Color.Red.ToDx9ARGB(),2, 4);
-                            //bool r=true;
-                            //    ImGuiNative.igShowDemoWindow(ref r);
                         }
-
-                        imGuiRender.Draw();
+                        if (Services.CompassSettings.ShowFPS) { 
+                            if (ImGui.BeginWindow("FPS counter",ref Services.CompassSettings._showFps,0, WindowFlags.NoResize | WindowFlags.NoTitleBar | WindowFlags.AlwaysAutoResize))
+                            {
+                                ImGui.SetWindowFontScale(1.3F);
+                                ImGui.Text($"{FPS.GetFPS():n0} fps");
+                            }
+                            ImGui.EndWindow();
+                        }
                         _sprite.End();
-                        if (Services.CompassSettings.ShowFPS && PerfomanseTester.IsRunning)
+                        imGuiRender.Draw();
+                        
+                        if (Services.CompassSettings.ShowRenderTime && PerfomanseTester.IsRunning)
                         {
                             PerfomanseTester.Stop();
                             Elapsed = PerfomanseTester.Elapsed;
@@ -294,6 +298,7 @@ namespace Capture.Hook
                 catch (Exception e)
                 {
                     DebugMessage(e.ToString());
+                    _sprite.End();
                 }
 
             #endregion

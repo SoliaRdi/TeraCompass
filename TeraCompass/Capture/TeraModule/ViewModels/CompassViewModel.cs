@@ -23,11 +23,9 @@ namespace Capture.TeraModule.ViewModels
     {
         public CameraScanner CameraScanner;
         public Dictionary<EntityId, PlayerModel> PlayerModels;
-        public List<string> DeathList;
 
         public CompassViewModel()
         {
-            DeathList = new List<string>();
             PlayerModels = new Dictionary<EntityId, PlayerModel>();
             CurrentProcess = Process.GetProcessesByName("tera").Single();
             CameraScanner = new CameraScanner(CurrentProcess);
@@ -92,7 +90,7 @@ namespace Capture.TeraModule.ViewModels
         public Vector2 GetScreenPos(PlayerModel entity)
         {
             var myPos = Vector3ToVector2(PacketProcessor.Instance.EntityTracker.CompassUser.Position);
-            var radarCenter = new Vector2(150f, 150f);
+            var radarCenter = new Vector2(160f, 160f);
             var screenPos = Vector3ToVector2(entity.Position);
             screenPos = myPos - screenPos;
             var distance = screenPos.Length() * (0.02f * Services.CompassSettings.Zoom);
@@ -106,27 +104,27 @@ namespace Capture.TeraModule.ViewModels
         
         internal void Render(Sprite sprite)
         {
-            Vector2 window_pos=new Vector2();
-            var window_size = new Vector2(320, 320);
+            if (Services.GameState != GameState.InGame) return;
+            Vector2 CompassPosition=new Vector2();
+            Vector2 CompassSize = new Vector2(320, 320);
             
-            var draw_list = ImGui.GetOverlayDrawList();
+            
             if (Services.CompassSettings.OverlayCorner != -1)
             {
-                window_pos =
-                    new Vector2(
-                        Services.CompassSettings.OverlayCorner == 1 ? ImGui.GetIO().DisplaySize.X - Services.CompassSettings.DISTANCE : Services.CompassSettings.DISTANCE,
-                        Services.CompassSettings.OverlayCorner == 2
-                            ? ImGui.GetIO().DisplaySize.Y - Services.CompassSettings.DISTANCE
-                            : Services.CompassSettings.DISTANCE );
-                
-                ImGui.SetNextWindowPos(window_pos, Condition.Always);
+                CompassPosition = new Vector2(Services.CompassSettings.DISTANCE,Services.CompassSettings.DISTANCE);
+                ImGui.SetNextWindowPos(CompassPosition, Condition.Always);
             }
 
-            ImGui.SetNextWindowSize(window_size, Condition.Always);
-            if (ImGui.BeginWindow("Overlay", ref Services.CompassSettings.OverlayOpened, window_size, 0,
-                (Services.CompassSettings.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoFocusOnAppearing))
+            ImGui.SetNextWindowSize(CompassSize, Condition.Always);
+            ImGuiNative.igSetNextWindowContentSize(CompassSize);
+            ImGui.PushStyleVar(StyleVar.WindowPadding, Vector2.Zero);
+            if (ImGui.BeginWindow("Overlay", ref Services.CompassSettings.OverlayOpened, Vector2.Zero, 0,
+                (Services.CompassSettings.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoBringToFrontOnFocus | WindowFlags.NoFocusOnAppearing|WindowFlags.NoScrollbar))
             {
-                window_pos = ImGui.GetWindowPosition();
+                //var draw_list = ImGui.GetOverlayDrawList();
+                var draw_list = DrawList.GetForCurrentWindow();
+                CompassPosition = ImGui.GetWindowPosition();
+                ImGui.PopStyleVar();
                 if (ImGuiNative.igBeginPopupContextWindow("Options", 1, true))
                 {
                     if (ImGui.MenuItem("Custom position", null, Services.CompassSettings.OverlayCorner == -1, true))
@@ -137,30 +135,32 @@ namespace Capture.TeraModule.ViewModels
 
                     ImGuiNative.igEndPopup();
                 }
+
+                Vector2 WindowCenter = new Vector2(CompassPosition.X + CompassSize.X * 0.5f, CompassPosition.Y + CompassSize.Y * 0.5f);
                 
                 draw_list.AddCircleFilled(
-                    new Vector2(window_pos.X + window_size.X * 0.5f, window_size.Y * 0.5f+window_pos.Y),
-                    160, Color.FromArgb(76, 15, 15, 15).ToDx9ARGB(), 128
+                    WindowCenter,
+                    CompassSize.X/2, Color.FromArgb(76, 15, 15, 15).ToDx9ARGB(), 128
                     );
-                draw_list.AddLine(new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y),
-                    new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y + window_size.Y),
+
+                draw_list.AddLine(new Vector2(WindowCenter.X, CompassPosition.Y),
+                    new Vector2(WindowCenter.X, CompassPosition.Y + CompassSize.Y),
                     Color.FromArgb(90, 70, 70, 255).ToDx9ARGB(), 1f);
 
-                draw_list.AddLine(new Vector2(window_pos.X, window_pos.Y + window_size.Y * 0.5f),
-                    new Vector2(window_pos.X + window_size.X, window_pos.Y + window_size.Y * 0.5f),
+                draw_list.AddLine(new Vector2(CompassPosition.X, WindowCenter.Y),
+                    new Vector2(CompassPosition.X + CompassSize.X, WindowCenter.Y),
                     Color.FromArgb(89, 70, 70, 255).ToDx9ARGB(), 1f);
 
-                var dot1 = new Vector2(window_pos.X + window_size.X * 0.5f, window_pos.Y + window_size.Y * 0.5f);
 
-                var dot2 = new Vector2(window_pos.X + window_size.X - 30, window_pos.Y + window_size.Y * 0.5f);
+                var dot2 = new Vector2(CompassPosition.X+CompassSize.X - 30, WindowCenter.Y);
 
                 var final = CameraScanner.CameraAddress != 0
-                    ? RotatePoint(dot2, dot1, new Angle(CameraScanner.Angle()).Gradus - 90)
-                    : RotatePoint(dot2, dot1,
+                    ? RotatePoint(dot2, WindowCenter, new Angle(CameraScanner.Angle()).Gradus - 90)
+                    : RotatePoint(dot2, WindowCenter,
                         PacketProcessor.Instance.EntityTracker.CompassUser.Heading.Gradus - 90);
 
-                draw_list.AddLine(dot1, final, Color.FromArgb(120, 255, 255, 255).ToDx9ARGB(), 1f);
-
+                draw_list.AddLine(WindowCenter, final, Color.FromArgb(120, 255, 255, 255).ToDx9ARGB(), 1f);
+                
                 var values = PlayerModels.Values.ToArray();
                 for (var i = 0; i < values.Length; i++)
                 {
@@ -184,22 +184,23 @@ namespace Capture.TeraModule.ViewModels
                     color = color.ToDx9ARGB();
 
                     draw_list.AddCircleFilled(
-                        new Vector2(window_pos.X + ScreenPosition.X, window_pos.Y + ScreenPosition.Y),
+                        new Vector2(CompassPosition.X+ScreenPosition.X, CompassPosition.Y+ScreenPosition.Y),
                         Services.CompassSettings.PlayerSize, color, Services.CompassSettings.PlayerSize * 2);
 
                     if (Services.CompassSettings.ShowNicknames)
                         draw_list.AddText(
-                            new Vector2(window_pos.X + ScreenPosition.X - values[i].Name.Length * 4 / 2f,
-                                window_pos.Y + ScreenPosition.Y + Services.CompassSettings.PlayerSize), $"{values[i].Name}",
+                            new Vector2(CompassPosition.X+ScreenPosition.X - values[i].Name.Length * 4 / 2f,
+                                CompassPosition.Y+ScreenPosition.Y + Services.CompassSettings.PlayerSize), $"{values[i].Name}",
                             color);
                     
                 }
             }
 
             ImGui.EndWindow();
+            
             if (PacketProcessor.Instance.EntityTracker.CompassUser.Status==1&&DXHookD3D9._imageCache.TryGetValue("incombat.png", out var texture))
                 sprite.Draw(texture,new SharpDX.Mathematics.Interop.RawColorBGRA(255,255,255,255),null,null,
-                    new SharpDX.Mathematics.Interop.RawVector3(window_pos.X+window_size.X-32,window_pos.Y+window_size.Y-64,0));
+                    new SharpDX.Mathematics.Interop.RawVector3(CompassPosition.X+CompassSize.X-32, CompassPosition.Y+CompassSize.Y-64,0));
             if (PlayerModels.Count > 0)
                 if (Services.CompassSettings.StatisticsOpened)
                 {
@@ -211,7 +212,7 @@ namespace Capture.TeraModule.ViewModels
 
                     if (GuldList.Count > 0)
                     {
-                        ImGui.SetNextWindowPos(new Vector2(window_pos.X, window_pos.Y + window_size.Y), Condition.Always);
+                        ImGui.SetNextWindowPos(new Vector2(CompassPosition.X, CompassPosition.Y + CompassSize.Y), Condition.Always);
                         if (ImGui.BeginWindow("Guilds", ref Services.CompassSettings.OverlayOpened, new Vector2(350, 200), 0.3f,
                             WindowFlags.NoTitleBar | WindowFlags.NoFocusOnAppearing))
                         {
@@ -267,7 +268,8 @@ namespace Capture.TeraModule.ViewModels
                     ImGui.Checkbox("Show only enemy players", ref Services.CompassSettings.CaptureOnlyEnemy);
                     ImGui.Checkbox("Filter by classes", ref Services.CompassSettings._filterByClasses);
                     ImGui.Checkbox("Show nicknames", ref Services.CompassSettings._showNicknames);
-                    ImGui.Checkbox("Perfomance test", ref Services.CompassSettings._showFps);
+                    ImGui.Checkbox("Show fps", ref Services.CompassSettings._showFps);
+                    ImGui.Checkbox("Show render time", ref Services.CompassSettings._showRenderTime);
                     ImGui.SliderFloat("Zoom", ref Services.CompassSettings._zoom, 1, 20, $"Zoom={Services.CompassSettings.Zoom}", 2f);
                     if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
                         ImGui.SetTooltip($"{Services.CompassSettings.Zoom:F2}");
@@ -332,13 +334,6 @@ namespace Capture.TeraModule.ViewModels
                         Services.CompassSettings.ResetSettings();
                         Services.Tracker.RunAutoPersist();
                     }
-
-                    //if (ImGuiRender.Icons.TryGetValue("incombat.png", out var intPtr))
-                    //{
-                    //    ImGui.TextUnformatted(ImGuiRender.Icons.Keys.First());
-                    //    ImGui.Image(intPtr, new Vector2(64, 64), new Vector2(0, 0), new Vector2(1, 1),
-                    //        new Vector4(0, 0, 0, 0), new Vector4(1, 1, 1, 1));
-                    //}
 
                 }
 

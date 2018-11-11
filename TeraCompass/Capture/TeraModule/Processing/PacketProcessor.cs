@@ -44,7 +44,7 @@ namespace Capture.TeraModule.Processing
 
 
 
-        public static PacketProcessor Instance { get; set; }
+        public static PacketProcessor Instance { get;}
 
         public EntityTracker EntityTracker { get; internal set; }
 

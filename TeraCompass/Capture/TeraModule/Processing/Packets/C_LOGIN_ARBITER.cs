@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using Capture.TeraModule.ViewModels;
 using TeraCompass.Processing;
 
 namespace Capture.TeraModule.Processing.Packets

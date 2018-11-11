@@ -292,7 +292,7 @@ namespace ImGuiNET
 
         // Widgets
         [DllImport(cimguiLib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void igText(string fmt);
+        public static extern void igText(byte* text);
 
         [DllImport(cimguiLib, CallingConvention = CallingConvention.Cdecl)]
         public static extern void igTextColored(Vector4 col, string fmt);

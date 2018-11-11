@@ -17,9 +17,8 @@ namespace TeraCompass.Tera.Core.Game.Services
 
         internal static void On<T>(this object obj, Action<T> callback)
         {
-            if (obj is T)
+            if (obj is T castObject)
             {
-                var castObject = (T) obj;
                 callback(castObject);
             }
         }

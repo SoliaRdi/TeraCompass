@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Capture.TeraModule.Processing.Packets;
 using TeraCompass.Processing.Packets;
 using TeraCompass.Tera.Core.Game.Messages;
@@ -154,6 +153,11 @@ namespace TeraCompass.Tera.Core.Game.Services
                 OnEntityUpdated(CompassUser);
             }
         }
+        public void Update(S_RETURN_TO_LOBBY m)
+        {
+            OnEntitysCleared(CompassUser);
+            Capture.TeraModule.Settings.Services.GameState = Capture.TeraModule.Settings.GameState.InLobby;
+        }
         /** Easy integrate style - compatible */
 
         public void Update(ParsedMessage message)
@@ -171,6 +175,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             message.On<SCreatureLife>(Update);
             message.On<S_DEAD_LOCATION>(Update);
             message.On<SUserStatus>(Update); 
+            message.On<S_RETURN_TO_LOBBY>(Update); 
         }
 
         private Entity LoginMe(LoginServerMessage m)

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Capture.TeraModule.Settings;
 using Capture.TeraModule.ViewModels;
 using TeraCompass.Processing;
 using TeraCompass.Tera.Core.Game.Messages.Server;
@@ -33,12 +34,13 @@ namespace Capture.TeraModule.Processing.Packets
                 if (trackerreset)
                 {
                     PacketProcessor.Instance.EntityTracker = new EntityTracker();
+                    PacketProcessor.Instance.CompassViewModel = new CompassViewModel();
                 }
                 PacketProcessor.Instance.NeedInit = false;
             }
 
             PacketProcessor.Instance.EntityTracker.Update(message);
-            PacketProcessor.Instance.CompassViewModel=new CompassViewModel();
+            Services.GameState = GameState.InGame;
         }
     }
 }

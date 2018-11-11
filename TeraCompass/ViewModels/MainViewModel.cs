@@ -82,40 +82,40 @@ namespace TeraCompass.ViewModels
                 NotifyOfPropertyChange(() => LogData);
             }
         }
+        public Process Process { get; set; }
         #endregion
         private void AttachProcess()
         {
             string exeName = Path.GetFileNameWithoutExtension("TERA.exe");
 
-            Process process= Process.GetProcessesByName(exeName).FirstOrDefault();
-            if (process !=null)
+            Process = Process.GetProcessesByName(exeName).FirstOrDefault();
+            if (Process != null)
             {
-                process.WaitForInputIdle();
-                var className = GetClassNameOfWindow(process.MainWindowHandle);
+                Process.WaitForInputIdle();
+                var className = GetClassNameOfWindow(Process.MainWindowHandle);
                 if (WaitSplash)
                     while (!className.Contains("Launch"))
                     {
-                        //process = Process.GetProcessesByName(exeName).FirstOrDefault();
-                        process.Refresh();
+                        Process.Refresh();
                         Thread.Sleep(50);
-                        className = GetClassNameOfWindow(process.MainWindowHandle);
+                        className = GetClassNameOfWindow(Process.MainWindowHandle);
                     }
-                process.Refresh();
+                Process.Refresh();
                 Thread.Sleep(100);
                 LogEvent(className);
-                if (process.MainWindowHandle == IntPtr.Zero)
+                if (Process.MainWindowHandle == IntPtr.Zero)
                 {
                     LogEvent("no MainWindowHandle...");
                     return;
                 }
-                if (Capture.Hook.HookManager.IsHooked(process.Id))
+                if (Capture.Hook.HookManager.IsHooked(Process.Id))
                 {
                     LogEvent("Game already hooked...");
                     return;
                 }
                 
                 Thread.Sleep(100);
-                while (IsHungAppWindow(process.MainWindowHandle))
+                while (IsHungAppWindow(Process.MainWindowHandle))
                 {
                     Thread.Sleep(100);
                 }
@@ -130,15 +130,14 @@ namespace TeraCompass.ViewModels
                     ShowOverlay = false,
                     TargetFramesPerSecond = 6
                 };
-                //var path = Path.Combine(Path.GetDirectoryName(process.MainModule.FileName), "resources", "data");
-                //if (!Directory.Exists(path))
-                //    Directory.CreateDirectory(path);
-                //if (!File.Exists(Path.Combine(path, "servers.txt")))
-                //    File.Copy("servers.txt", Path.Combine(path, "servers.txt"));
+
                 var captureInterface = new CaptureInterface();
                 captureInterface.RemoteMessage += e => { LogEvent(e.Message);};
-                _captureProcess = new CaptureProcess(process, cc, captureInterface);
-                //LogEvent("Compass initialized...");
+                //captureInterface.Disconnected += CaptureInterface_Disconnected;
+                _captureProcess = new CaptureProcess(Process, cc, captureInterface);
+
+                Process.EnableRaisingEvents = true;
+                Process.Exited += Process_Exited;
             }
             else
             {
@@ -147,6 +146,22 @@ namespace TeraCompass.ViewModels
             Thread.Sleep(10);
             
         }
+
+        private void CaptureInterface_Disconnected()
+        {
+            LogEvent("Client down");
+            Thread.Sleep(1000);
+            
+            InitializeProgram();
+        }
+
+        private void Process_Exited(object sender, EventArgs e)
+        {
+            
+            LogEvent("Client down");
+            InitializeProgram();
+        }
+
         public MainViewModel(IEventAggregator eventAggregator)
         {
             eventAggregator.Subscribe(this);
@@ -187,7 +202,6 @@ namespace TeraCompass.ViewModels
 
                         watcher.Stop();
                         Task.Factory.StartNew(AttachProcess);
-                       
                     }
                 });
             }
@@ -195,9 +209,6 @@ namespace TeraCompass.ViewModels
             {
                 Task.Factory.StartNew(AttachProcess);
             }
-
-           
-
         }
         public void PcapWarning(string str)
         {

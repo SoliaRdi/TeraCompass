@@ -7,8 +7,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Capture.GUI.Vertex;
-using Capture.Hook.Input;
+using Capture.Hook;
 using Capture.Interface;
+using Capture.TeraModule.Hook;
 using EasyHook;
 using ImGuiNET;
 using SharpDX;
@@ -37,55 +38,68 @@ namespace Capture.GUI
     {
         private readonly IntPtr _windowHandle;
         private readonly Device device;
-        private readonly LocalHook DefWindowProcWHook, inputHook;
+        private readonly LocalHook DefWindowProcWHook, inputHook, realEncryptHook;
         private readonly MouseState mouseState = new MouseState();
         private int _wheelPosition;
         private Texture texNative;
         private readonly inputHookDelegate OriginalInputHook;
         private readonly TWindowProcW OriginalWndProcHook;
-
-        public ImGuiRender(Device dev, NativeMethods.Rect windowRect, CaptureInterface _interface, IntPtr windowHandle)
+        //private readonly TRealEncrypt OriginalEncryptHook;
+        public ImGuiRender(Device dev, NativeMethods.Rect windowRect, CaptureInterface _interface, Process currentProcess)
         {
 
             device = dev;
-            _windowHandle = windowHandle;
-            IntPtr InputHookAddr = LocalHook.GetProcAddress("user32.dll", "GetRawInputData");
+            _windowHandle = currentProcess.MainWindowHandle;
+            var InputHookAddr = LocalHook.GetProcAddress("user32.dll", "GetRawInputData");
             inputHook = LocalHook.Create(InputHookAddr, new inputHookDelegate(inputHookSub), this);
-            inputHook.ThreadACL.SetExclusiveACL(new Int32[0]);
+            inputHook.ThreadACL.SetExclusiveACL(new int[0]);
             OriginalInputHook =
                 (inputHookDelegate) Marshal.GetDelegateForFunctionPointer(InputHookAddr, typeof(inputHookDelegate));
             var defWindowProcWAddr = LocalHook.GetProcAddress("user32.dll", "DefWindowProcW");
             DefWindowProcWHook = LocalHook.Create(defWindowProcWAddr, new TWindowProcW(WindowProcWImplementation), this);
             DefWindowProcWHook.ThreadACL.SetExclusiveACL(new int[0]);
             OriginalWndProcHook = (TWindowProcW)Marshal.GetDelegateForFunctionPointer(defWindowProcWAddr, typeof(TWindowProcW));
+
+            //SigScan scan = new SigScan
+            //{
+            //    Process = currentProcess,
+            //    Address = currentProcess.MainModule.BaseAddress,
+            //    Size = currentProcess.MainModule.ModuleMemorySize
+            //};
+            //var encFuncPattern = new byte[] { 0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x28, 0x8B, 0x41, 0x04, 0x8B, 0x55, 0x0C, 0x53, 0x56, 0x57 };
+            //var realEncAddr = scan.FindPattern(
+            //    encFuncPattern,
+            //    "xxxxxxxxxxxxxxx", 0);
+
+            //Trace.WriteLine(realEncAddr);
+            //realEncryptHook = LocalHook.Create(realEncAddr, new TRealEncrypt(realEncrypt), this);
+            //OriginalEncryptHook = (TRealEncrypt)Marshal.GetDelegateForFunctionPointer(realEncAddr, typeof(TRealEncrypt));
+            //realEncryptHook.ThreadACL.SetExclusiveACL(new int[0]);
+
             var io = ImGui.GetIO();
             UpdateCanvasSize(windowRect.Right - windowRect.Left, windowRect.Bottom - windowRect.Top);
             PrepareTextureImGui();
             SetupKeyMapping(io);
         }
 
-        public void Dispose()
-        {
-            try
-            {
-                inputHook?.Dispose();
-                DefWindowProcWHook?.Dispose();
-                var io = ImGui.GetIO();
-                io.FontAtlas.Clear();
-                ImGui.Shutdown();
-                if (texNative.NativePointer != IntPtr.Zero)
-                    Marshal.Release(texNative.NativePointer);
-                texNative.Dispose();
-                GC.SuppressFinalize(this);
-            }
-            catch (Exception e)
-
-            {
-                Trace.Write(e.Message);
-            }
-        }
-
-        
+        //private void realEncrypt(IntPtr encBuffer)
+        //{
+            
+        //    //return OriginalEncryptHook(encBuffer);
+        //    //uint res = 0;
+        //    //try
+        //    //{
+        //    //    //Trace.WriteLine($"retnEncAddr={retnEncAddr} || encBuffer={encBuffer} || encSize={encSize}|| {d} || {e}");
+        //    //    res = OriginalEncryptHook(encBuffer, encSize, retnEncAddr,d,e);
+        //    //    //Trace.WriteLine($"realEncrypt result = {res}");
+                
+        //    //}
+        //    //catch (Exception ex)
+        //    //{
+        //    //    Trace.Write("ERROR realEncrypt: " + ex.Message);
+        //    //}
+        //    //return res;
+        //}
 
         private IntPtr WindowProcWImplementation(IntPtr hWnd, WindowsMessages uMsg, IntPtr wParam, IntPtr lParam)
         {
@@ -284,9 +298,8 @@ namespace Capture.GUI
         public unsafe void Draw()
         {
             var io = ImGui.GetIO();
-            io.DeltaTime = 1f / 20f;
+            //io.DeltaTime = 1f / 20f;
             UpdateImGuiInput(io);
-            
             ImGui.Render();
             var data = ImGui.GetDrawData();
             ImGuiRenderDraw(data);
@@ -410,11 +423,33 @@ namespace Capture.GUI
             st.Apply();
             st.Dispose();
         }
+        public void Dispose()
+        {
+            try
+            {
+                inputHook?.Dispose();
+                DefWindowProcWHook?.Dispose();
+                var io = ImGui.GetIO();
+                io.FontAtlas.Clear();
+                ImGui.Shutdown();
+                if (texNative.NativePointer != IntPtr.Zero)
+                    Marshal.Release(texNative.NativePointer);
+                texNative.Dispose();
+                GC.SuppressFinalize(this);
+            }
+            catch (Exception e)
+
+            {
+                Trace.Write(e.Message);
+            }
+        }
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
         private delegate uint inputHookDelegate(IntPtr a, IntPtr b, IntPtr c, IntPtr d, IntPtr e);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
         private delegate IntPtr TWindowProcW([In] IntPtr hWnd, WindowsMessages uMsg, IntPtr wParam, IntPtr lParam);
+        //[UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        //private delegate void TRealEncrypt(IntPtr retnEncAddr);
     }
 }

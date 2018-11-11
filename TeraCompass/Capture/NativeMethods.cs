@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
-using Capture.Hook.Input;
+using Capture.Hook;
 
 namespace Capture
 {

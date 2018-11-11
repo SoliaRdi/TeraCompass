@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Capture.Hook.Input
+namespace Capture.Hook
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct NativeMessage

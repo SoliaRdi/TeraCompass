@@ -80,7 +80,7 @@
     <Compile Include="GUI\Vertex\GuiVertex.cs" />
     <Compile Include="Hook\DebugListener.cs" />
     <Compile Include="Hook\ImageElement.cs" />
-    <Compile Include="Hook\Input\Constants.cs" />
+    <Compile Include="Hook\Constants.cs" />
     <Compile Include="Hook\SafeHGlobal.cs" />
     <Compile Include="Hook\DX9FormatExtension.cs" />
     <Compile Include="Hook\FramesPerSecond.cs" />
@@ -110,6 +110,7 @@
     <Compile Include="SharpDx\IComponent.cs" />
     <Compile Include="TeraModule\CameraFinder\CameraScanner.cs" />
     <Compile Include="TeraModule\CameraFinder\MemoryScanner.cs" />
+    <Compile Include="TeraModule\Hook\SigScan.cs" />
     <Compile Include="TeraModule\Processing\Packets\S_DEAD_LOCATION.cs" />
     <Compile Include="TeraModule\Settings\Services.cs" />
     <Compile Include="TeraModule\ViewModels\CompassViewModel.cs" />

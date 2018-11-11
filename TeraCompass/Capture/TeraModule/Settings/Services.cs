@@ -17,6 +17,7 @@ namespace Capture.TeraModule.Settings
         public static StateTracker Tracker = new StateTracker();
 
         public static CompassSettings CompassSettings = new CompassSettings();
+        public static GameState GameState { get; set; }
         //public static AppSettings Settings = new AppSettings();
     }
 
@@ -32,6 +33,10 @@ namespace Capture.TeraModule.Settings
     //    public CompassSettings CompassSettings { get; set; }
     //}
 
+    public enum GameState
+    {
+        InLobby,InGame
+    }
 
     [Serializable]
     public class CompassSettings
@@ -85,6 +90,7 @@ namespace Capture.TeraModule.Settings
         public bool _filterByClasses;
         public bool _showNicknames;
         public bool _showFps;
+        public bool _showRenderTime;
         public float _zoom;
         public int _playerSize;
 
@@ -113,6 +119,7 @@ namespace Capture.TeraModule.Settings
             FilterByClasses = false;
             ShowNicknames = false;
             ShowFPS = false;
+            ShowRenderTime = false;
             FilteredClasses = new HashSet<PlayerClass>();
         }
 
@@ -135,6 +142,12 @@ namespace Capture.TeraModule.Settings
         {
             get => _showFps;
             set => _showFps = value;
+        }
+        [Trackable]
+        public bool ShowRenderTime
+        {
+            get => _showRenderTime;
+            set => _showRenderTime = value;
         }
 
         [Trackable]
