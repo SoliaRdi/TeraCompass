@@ -7,15 +7,18 @@ namespace Capture.Hook
     public struct NativeMessage
     {
         public IntPtr handle;
-        public uint msg;
+        public WindowsMessages msg;
         public IntPtr wParam;
         public IntPtr lParam;
         public uint time;
-        public System.Drawing.Point p;
+        public NativeMethods.Point p;
+        public uint lPrivate; public override string ToString()
+        {
+            return $"({msg}||{wParam}|{lParam}||{p.X},{p.Y})";
+        }
     }
-
     [StructLayout(LayoutKind.Explicit)]
-    internal struct RAWINPUT
+    public struct RAWINPUT
     {
         [FieldOffset(0)] public RAWINPUTHEADER header;
         [FieldOffset(16)] public RAWMOUSE mouse;
@@ -24,7 +27,7 @@ namespace Capture.Hook
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct RAWINPUTHEADER
+    public struct RAWINPUTHEADER
     {
         [MarshalAs(UnmanagedType.U4)] public int dwType;
         [MarshalAs(UnmanagedType.U4)] public int dwSize;
@@ -33,21 +36,21 @@ namespace Capture.Hook
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct RAWHID
+    public struct RAWHID
     {
         [MarshalAs(UnmanagedType.U4)] public int dwSizHid;
         [MarshalAs(UnmanagedType.U4)] public int dwCount;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct BUTTONSSTR
+    public struct BUTTONSSTR
     {
         [MarshalAs(UnmanagedType.U2)] public ushort usButtonFlags;
         [MarshalAs(UnmanagedType.U2)] public ushort usButtonData;
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    internal struct RAWMOUSE
+    public struct RAWMOUSE
     {
         [MarshalAs(UnmanagedType.U2)]
         [FieldOffset(0)]
@@ -72,7 +75,7 @@ namespace Capture.Hook
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct RAWKEYBOARD
+    public struct RAWKEYBOARD
     {
         [MarshalAs(UnmanagedType.U2)] public ushort MakeCode;
         [MarshalAs(UnmanagedType.U2)] public ushort Flags;
@@ -116,7 +119,27 @@ namespace Capture.Hook
     {
             RID_HEADER = 0x10000005, RID_INPUT = 0x10000003
     }
-
+    // from WinUser.h
+    public enum HookType
+    {
+        WH_MIN = (-1),
+        WH_MSGFILTER = (-1),
+        WH_JOURNALRECORD = 0,
+        WH_JOURNALPLAYBACK = 1,
+        WH_KEYBOARD = 2,
+        WH_GETMESSAGE = 3,
+        WH_CALLWNDPROC = 4,
+        WH_CBT = 5,
+        WH_SYSMSGFILTER = 6,
+        WH_MOUSE = 7,
+        WH_HARDWARE = 8,
+        WH_DEBUG = 9,
+        WH_SHELL = 10,
+        WH_FOREGROUNDIDLE = 11,
+        WH_CALLWNDPROCRET = 12,
+        WH_KEYBOARD_LL = 13,
+        WH_MOUSE_LL = 14
+    }
     class VIRTUALKEY
     {
 
@@ -396,7 +419,7 @@ namespace Capture.Hook
     /// Defined in winuser.h from Windows SDK v6.1
     /// Documentation pulled from MSDN.
     /// </summary>
-    public enum WindowsMessages : uint
+    public enum  WindowsMessages : uint
     {
         /// <summary>
         /// The WM_NULL message performs no operation. An application sends the WM_NULL message if it wants to post a message that the recipient window will ignore.

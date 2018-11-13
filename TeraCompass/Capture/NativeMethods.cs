@@ -8,7 +8,7 @@ using Capture.Hook;
 namespace Capture
 {
     [System.Security.SuppressUnmanagedCodeSecurity()]
-    internal sealed class NativeMethods
+    public sealed class NativeMethods
     {
         private NativeMethods() { }
 

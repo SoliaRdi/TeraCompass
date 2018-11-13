@@ -38,180 +38,72 @@ namespace Capture.GUI
     {
         private readonly IntPtr _windowHandle;
         private readonly Device device;
-        private readonly LocalHook DefWindowProcWHook, inputHook, realEncryptHook;
+
         private readonly MouseState mouseState = new MouseState();
-        private int _wheelPosition;
         private Texture texNative;
-        private readonly inputHookDelegate OriginalInputHook;
-        private readonly TWindowProcW OriginalWndProcHook;
-        //private readonly TRealEncrypt OriginalEncryptHook;
+
+        int hHook;
+        HookProc hp;
+        [DllImport("user32", SetLastError = true)]
+        static extern int SetWindowsHookEx(HookType iHook, HookProc proc, IntPtr hMod, int threadId);
+        [DllImport("user32")]
+        static extern int CallNextHookEx(int hHook, int idHook, IntPtr wParam, IntPtr lParam);
+        [DllImport("user32")]
+        static extern int UnhookWindowsHookEx(int iHook);
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
+        delegate int HookProc(int idHook, IntPtr wParam, IntPtr lParam);
         public ImGuiRender(Device dev, NativeMethods.Rect windowRect, CaptureInterface _interface, Process currentProcess)
         {
 
             device = dev;
             _windowHandle = currentProcess.MainWindowHandle;
-            var InputHookAddr = LocalHook.GetProcAddress("user32.dll", "GetRawInputData");
-            inputHook = LocalHook.Create(InputHookAddr, new inputHookDelegate(inputHookSub), this);
-            inputHook.ThreadACL.SetExclusiveACL(new int[0]);
-            OriginalInputHook =
-                (inputHookDelegate) Marshal.GetDelegateForFunctionPointer(InputHookAddr, typeof(inputHookDelegate));
-            var defWindowProcWAddr = LocalHook.GetProcAddress("user32.dll", "DefWindowProcW");
-            DefWindowProcWHook = LocalHook.Create(defWindowProcWAddr, new TWindowProcW(WindowProcWImplementation), this);
-            DefWindowProcWHook.ThreadACL.SetExclusiveACL(new int[0]);
-            OriginalWndProcHook = (TWindowProcW)Marshal.GetDelegateForFunctionPointer(defWindowProcWAddr, typeof(TWindowProcW));
-
-            //SigScan scan = new SigScan
-            //{
-            //    Process = currentProcess,
-            //    Address = currentProcess.MainModule.BaseAddress,
-            //    Size = currentProcess.MainModule.ModuleMemorySize
-            //};
-            //var encFuncPattern = new byte[] { 0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x28, 0x8B, 0x41, 0x04, 0x8B, 0x55, 0x0C, 0x53, 0x56, 0x57 };
-            //var realEncAddr = scan.FindPattern(
-            //    encFuncPattern,
-            //    "xxxxxxxxxxxxxxx", 0);
-
-            //Trace.WriteLine(realEncAddr);
-            //realEncryptHook = LocalHook.Create(realEncAddr, new TRealEncrypt(realEncrypt), this);
-            //OriginalEncryptHook = (TRealEncrypt)Marshal.GetDelegateForFunctionPointer(realEncAddr, typeof(TRealEncrypt));
-            //realEncryptHook.ThreadACL.SetExclusiveACL(new int[0]);
-
+            hp = hookProc;
+            var cp = Process.GetCurrentProcess();
+            var mName = Path.GetFileNameWithoutExtension(cp.MainModule.ModuleName);
+            hHook = SetWindowsHookEx(HookType.WH_GETMESSAGE, hp, GetModuleHandle(mName), cp.Threads[0].Id);
             var io = ImGui.GetIO();
             UpdateCanvasSize(windowRect.Right - windowRect.Left, windowRect.Bottom - windowRect.Top);
             PrepareTextureImGui();
             SetupKeyMapping(io);
         }
-
-        //private void realEncrypt(IntPtr encBuffer)
-        //{
-            
-        //    //return OriginalEncryptHook(encBuffer);
-        //    //uint res = 0;
-        //    //try
-        //    //{
-        //    //    //Trace.WriteLine($"retnEncAddr={retnEncAddr} || encBuffer={encBuffer} || encSize={encSize}|| {d} || {e}");
-        //    //    res = OriginalEncryptHook(encBuffer, encSize, retnEncAddr,d,e);
-        //    //    //Trace.WriteLine($"realEncrypt result = {res}");
+        int hookProc(int hookId, IntPtr wParam, IntPtr lParam)
+        {
+            if (hookId >= 0)
+            {
                 
-        //    //}
-        //    //catch (Exception ex)
-        //    //{
-        //    //    Trace.Write("ERROR realEncrypt: " + ex.Message);
-        //    //}
-        //    //return res;
-        //}
-
-        private IntPtr WindowProcWImplementation(IntPtr hWnd, WindowsMessages uMsg, IntPtr wParam, IntPtr lParam)
-        {
-            try
-            {
-                switch (uMsg)
+                var inputInfo = Marshal.PtrToStructure<NativeMessage>(lParam);
+                switch (inputInfo.msg)
                 {
+                    case WindowsMessages.LBUTTONDOWN:
+                        mouseState.LMB = true;
+                        break;
+                    case WindowsMessages.LBUTTONUP:
+                        mouseState.LMB = false;
+                        break;
+                    case WindowsMessages.MBUTTONDOWN:
+                        mouseState.MMB = true;
+                        break;
+                    case WindowsMessages.MBUTTONUP:
+                        mouseState.MMB = false;
+                        break;
+                    case WindowsMessages.RBUTTONDOWN:
+                        mouseState.RMB = true;
+                        break;
+                    case WindowsMessages.RBUTTONUP:
+                        mouseState.RMB = false;
+                        break;
+                    case WindowsMessages.MOUSEWHEEL:
+                        mouseState.Wheel = 120;
+                        break;
                     case WindowsMessages.MOUSEMOVE:
-                    {
-                        mouseState.X = (short) lParam.ToInt32();
-                        mouseState.Y = lParam.ToInt32() >> 16;
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.Write("ERROR wndproc: " + ex.Message);
-            }
-            
-
-            return OriginalWndProcHook(hWnd, uMsg, wParam, lParam);
-        }
-        uint inputHookSub(IntPtr hRawInput, IntPtr uiCommand, IntPtr pData, IntPtr pcbSize, IntPtr cbSizeHeader)
-        {
-            uint res = 0;
-
-            try
-            {
-                res = OriginalInputHook(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
-                if (res != 0)
-                {
-                    RAWINPUT inp = (RAWINPUT) Marshal.PtrToStructure(pData, typeof(RAWINPUT));
-                    Marshal.Release(pData);
-                    if (inp.header.dwType == RawDeviceType.RIM_TYPEMOUSE&&inp.mouse.ulButtons != 0)
-                    {
-                        switch (inp.mouse.ulButtons)
-                        {
-                            case RawMouseButtons.MOUSE_LEFT_BUTTON_DOWN:
-                                mouseState.LMB = true;
-                                break;
-                            case RawMouseButtons.MOUSE_LEFT_BUTTON_UP:
-                                mouseState.LMB = false;
-                                break;
-                            case RawMouseButtons.MOUSE_RIGHT_BUTTON_DOWN:
-                                mouseState.RMB = true;
-                                break;
-                            case RawMouseButtons.MOUSE_RIGHT_BUTTON_UP:
-                                mouseState.RMB = false;
-                                break;
-                            case RawMouseButtons.MOUSE_MIDDLE_BUTTON_DOWN:
-                                mouseState.MMB = true;
-                                break;
-                            case RawMouseButtons.MOUSE_MIDDLE_BUTTON_UP:
-                                mouseState.MMB = false;
-                                break;
-                            case RawMouseButtons.MOUSE_WHEEL:
-                                mouseState.Wheel += inp.mouse.buttonsStr.usButtonData;
-                                break;
-                        }
-                    }
-                    //uint virtualKey = inp.keyboard.VKey;
-                    //uint makeCode = inp.keyboard.MakeCode;
-                    //uint flags = inp.keyboard.Flags;
-                    //if (virtualKey != 0)
-                    //{
-                    //    var keyCode = VirtualKeyCorrection(inp, virtualKey, (flags & VIRTUALKEY.RI_KEY_E0) != 0, makeCode);
-                    //    Trace.Write(keyCode);
-                    //}
-
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.Write("ERROR input: " + ex.InnerException);
-            }
-
-            return res;
-        }
-        private static uint VirtualKeyCorrection(RAWINPUT input, uint virtualKey, bool isE0BitSet, uint makeCode)
-        {
-            var correctedVKey = virtualKey;
-
-            if (input.header.hDevice == IntPtr.Zero)
-            {
-                // When hDevice is 0 and the vkey is VK_CONTROL indicates the ZOOM key
-                if (input.keyboard.VKey == VIRTUALKEY.VK_CONTROL)
-                {
-                    correctedVKey = VIRTUALKEY.VK_ZOOM;
-                }
-            }
-            else
-            {
-                switch (virtualKey)
-                {
-                    // Right-hand CTRL and ALT have their e0 bit set 
-                    case VIRTUALKEY.VK_CONTROL:
-                        correctedVKey = isE0BitSet ? VIRTUALKEY.VK_RCONTROL : VIRTUALKEY.VK_LCONTROL;
-                        break;
-                    case VIRTUALKEY.VK_MENU:
-                        correctedVKey = isE0BitSet ? VIRTUALKEY.VK_RMENU : VIRTUALKEY.VK_LMENU;
-                        break;
-                    case VIRTUALKEY.VK_SHIFT:
-                        correctedVKey = makeCode == VIRTUALKEY.SC_SHIFT_R ? VIRTUALKEY.VK_RSHIFT : VIRTUALKEY.VK_LSHIFT;
-                        break;
-                    default:
-                        correctedVKey = virtualKey;
+                        mouseState.X = inputInfo.p.X;
+                        mouseState.Y = inputInfo.p.Y;
                         break;
                 }
+                //Trace.Write($"hHook {hHook} {hookId} wParam {wParam} lParam {lParam} {inputInfo}");
             }
-
-            return (correctedVKey);
+            return CallNextHookEx(hHook, hookId, wParam, lParam);
         }
 
         public static unsafe void memcpy(void* dst, void* src, int count)
@@ -254,10 +146,6 @@ namespace Capture.GUI
             io.FontAtlas.SetTexID(t.NativePointer);
             texNative = t;
             io.FontAtlas.ClearTexData();
-
-
-
-
         }
 
         private void SetupKeyMapping(IO io)
@@ -298,7 +186,6 @@ namespace Capture.GUI
         public unsafe void Draw()
         {
             var io = ImGui.GetIO();
-            //io.DeltaTime = 1f / 20f;
             UpdateImGuiInput(io);
             ImGui.Render();
             var data = ImGui.GetDrawData();
@@ -320,10 +207,8 @@ namespace Capture.GUI
             io.MouseDown[0] = mouseState.LMB;
             io.MouseDown[1] = mouseState.RMB;
             io.MouseDown[2] = mouseState.MMB;
-            float newWheelPos = mouseState.Wheel;
-            var delta = newWheelPos - _wheelPosition;
-            _wheelPosition = (int) newWheelPos;
-            io.MouseWheel = delta;
+
+            io.MouseWheel = mouseState.Wheel;
             mouseState.Wheel = 0;
         }
         private unsafe void ImGuiRenderDraw(DrawData* drawData)
@@ -427,11 +312,10 @@ namespace Capture.GUI
         {
             try
             {
-                inputHook?.Dispose();
-                DefWindowProcWHook?.Dispose();
                 var io = ImGui.GetIO();
                 io.FontAtlas.Clear();
                 ImGui.Shutdown();
+                UnhookWindowsHookEx(hHook);
                 if (texNative.NativePointer != IntPtr.Zero)
                     Marshal.Release(texNative.NativePointer);
                 texNative.Dispose();
@@ -443,13 +327,5 @@ namespace Capture.GUI
                 Trace.Write(e.Message);
             }
         }
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        private delegate uint inputHookDelegate(IntPtr a, IntPtr b, IntPtr c, IntPtr d, IntPtr e);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        private delegate IntPtr TWindowProcW([In] IntPtr hWnd, WindowsMessages uMsg, IntPtr wParam, IntPtr lParam);
-        //[UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        //private delegate void TRealEncrypt(IntPtr retnEncAddr);
     }
 }
