@@ -12,7 +12,8 @@ namespace Capture.Hook
         public IntPtr lParam;
         public uint time;
         public NativeMethods.Point p;
-        public uint lPrivate; public override string ToString()
+        public uint lPrivate;
+        public override string ToString()
         {
             return $"({msg}||{wParam}|{lParam}||{p.X},{p.Y})";
         }

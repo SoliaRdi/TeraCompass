@@ -32,7 +32,6 @@ namespace TeraCompass.Tera.Core.Game
             : this(message.Id)
         {
             Name = message.Name;
-            GuildName = message.GuildName;
             RaceGenderClass = message.RaceGenderClass;
             PlayerId = message.PlayerId;
             ServerId = message.ServerId;

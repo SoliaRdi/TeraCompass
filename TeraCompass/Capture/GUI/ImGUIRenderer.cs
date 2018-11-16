@@ -40,10 +40,23 @@ namespace Capture.GUI
         private readonly Device device;
 
         private readonly MouseState mouseState = new MouseState();
+        //private static readonly List<ushort> keyInput = new List<ushort>();
         private Texture texNative;
+        //private Dictionary<char, bool> KeyDown = new Dictionary<char, bool>();
+        //public static bool CaptureKeyboard
+        //{
+        //    get => _captureKeyboard;
+        //    set
+        //    {
+        //        keyInput.Clear();
+        //        _captureKeyboard = value;
+        //    }
+        //}
 
         int hHook;
         HookProc hp;
+        private static bool _captureKeyboard;
+
         [DllImport("user32", SetLastError = true)]
         static extern int SetWindowsHookEx(HookType iHook, HookProc proc, IntPtr hMod, int threadId);
         [DllImport("user32")]
@@ -62,8 +75,13 @@ namespace Capture.GUI
             var cp = Process.GetCurrentProcess();
             var mName = Path.GetFileNameWithoutExtension(cp.MainModule.ModuleName);
             hHook = SetWindowsHookEx(HookType.WH_GETMESSAGE, hp, GetModuleHandle(mName), cp.Threads[0].Id);
+            IntPtr context = ImGui.CreateContext();
+            ImGui.SetCurrentContext(context);
             var io = ImGui.GetIO();
-            UpdateCanvasSize(windowRect.Right - windowRect.Left, windowRect.Bottom - windowRect.Top);
+            io.DisplaySize= new Vector2(windowRect.Right - windowRect.Left, windowRect.Bottom - windowRect.Top);
+            io.WantCaptureKeyboard = true;
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+            ImGui.GetStyle().WindowBorderSize=0;
             PrepareTextureImGui();
             SetupKeyMapping(io);
         }
@@ -100,6 +118,25 @@ namespace Capture.GUI
                         mouseState.X = inputInfo.p.X;
                         mouseState.Y = inputInfo.p.Y;
                         break;
+                    //case WindowsMessages.KEYDOWN:
+                    //case WindowsMessages.SYSKEYDOWN:
+                    //    if ((char)inputInfo.wParam < 512)
+                    //        KeyDown[(char)wParam] = true;
+                    //    break;
+                    //case WindowsMessages.KEYUP:
+                    //case WindowsMessages.SYSKEYUP:
+                    //    if ((char)inputInfo.wParam < 512)
+                    //        KeyDown[(char)wParam] = false;
+                    //    break;
+                    //case WindowsMessages.CHAR:
+                    //    if (true)
+                    //    {
+                    //        keyInput.Add((char)inputInfo.wParam);
+                    //        Trace.Write((char)inputInfo.wParam);
+                    //    }
+                            
+                    //    //Trace.Write($"hHook {hHook} {hookId} wParam {wParam} lParam {lParam} {inputInfo}");
+                    //    break;
                 }
                 //Trace.Write($"hHook {hHook} {hookId} wParam {wParam} lParam {lParam} {inputInfo}");
             }
@@ -129,53 +166,47 @@ namespace Capture.GUI
             };
             fixed (char* pChars = ranges)
             {
-                io.FontAtlas.AddFontFromFileTTF("C:\\Windows\\Fonts\\tahoma.ttf", 12f, pChars);
-                
+                io.Fonts.AddFontFromFileTTF("C:\\Windows\\Fonts\\tahoma.ttf", 12f, null,(IntPtr)pChars);
             }
-
-            var texDataAsRgba32 = io.FontAtlas.GetTexDataAsRGBA32();
-            var t = new Texture(device, texDataAsRgba32.Width, texDataAsRgba32.Height, 1, Usage.Dynamic,
+            
+            io.Fonts.GetTexDataAsRGBA32(out byte* pixels, out int width, out int height,out int bytes_per_pixel);
+            var t = new Texture(device, width, height, 1, Usage.Dynamic,
                 Format.A8R8G8B8, Pool.Default);
             var rect = t.LockRectangle(0, LockFlags.None);
             
-            for (var y = 0; y < texDataAsRgba32.Height; y++)
+            for (var y = 0; y < height; y++)
                 memcpy((byte*) (rect.DataPointer + rect.Pitch * y),
-                    texDataAsRgba32.Pixels + texDataAsRgba32.Width * texDataAsRgba32.BytesPerPixel * y,
-                    texDataAsRgba32.Width * texDataAsRgba32.BytesPerPixel);
+                    pixels + width * bytes_per_pixel * y,
+                    width * bytes_per_pixel);
             t.UnlockRectangle(0);
-            io.FontAtlas.SetTexID(t.NativePointer);
+            io.Fonts.SetTexID(t.NativePointer);
             texNative = t;
-            io.FontAtlas.ClearTexData();
+            io.Fonts.ClearTexData();
         }
 
-        private void SetupKeyMapping(IO io)
+        private void SetupKeyMapping(ImGuiIOPtr io)
         {
-            io.KeyMap[GuiKey.Tab] = (int) Keys.Tab;
-            io.KeyMap[GuiKey.LeftArrow] = (int) Keys.Left;
-            io.KeyMap[GuiKey.RightArrow] = (int) Keys.Right;
-            io.KeyMap[GuiKey.UpArrow] = (int) Keys.Up;
-            io.KeyMap[GuiKey.DownArrow] = (int) Keys.Down;
-            io.KeyMap[GuiKey.PageUp] = (int) Keys.PageUp;
-            io.KeyMap[GuiKey.PageDown] = (int) Keys.PageDown;
-            io.KeyMap[GuiKey.Home] = (int) Keys.Home;
-            io.KeyMap[GuiKey.End] = (int) Keys.End;
-            io.KeyMap[GuiKey.Delete] = (int) Keys.Delete;
-            io.KeyMap[GuiKey.Backspace] = (int) Keys.Back;
-            io.KeyMap[GuiKey.Enter] = (int) Keys.Enter;
-            io.KeyMap[GuiKey.Escape] = (int) Keys.Escape;
-            io.KeyMap[GuiKey.A] = (int) Keys.A;
-            io.KeyMap[GuiKey.C] = (int) Keys.C;
-            io.KeyMap[GuiKey.V] = (int) Keys.V;
-            io.KeyMap[GuiKey.X] = (int) Keys.X;
-            io.KeyMap[GuiKey.Y] = (int) Keys.Y;
-            io.KeyMap[GuiKey.Z] = (int) Keys.Z;
-        }
-
-        public void UpdateCanvasSize(float width, float height)
-        {
-            var io = ImGui.GetIO();
-            io.DisplaySize = new Vector2(width, height);
-            //io.DisplayFramebufferScale = new System.Numerics.Vector2(width / height);
+            #region No Resharper
+            io.KeyMap[(int)ImGuiKey.Tab] = (int) Keys.Tab;
+            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int) Keys.Left;
+            io.KeyMap[(int)ImGuiKey.RightArrow] = (int) Keys.Right;
+            io.KeyMap[(int)ImGuiKey.UpArrow] = (int) Keys.Up;
+            io.KeyMap[(int)ImGuiKey.DownArrow] = (int) Keys.Down;
+            io.KeyMap[(int)ImGuiKey.PageUp] = (int) Keys.PageUp;
+            io.KeyMap[(int)ImGuiKey.PageDown] = (int) Keys.PageDown;
+            io.KeyMap[(int)ImGuiKey.Home] = (int) Keys.Home;
+            io.KeyMap[(int)ImGuiKey.End] = (int) Keys.End;
+            io.KeyMap[(int)ImGuiKey.Delete] = (int) Keys.Delete;
+            io.KeyMap[(int)ImGuiKey.Backspace] = (int) Keys.Back;
+            io.KeyMap[(int)ImGuiKey.Enter] = (int) Keys.Enter;
+            io.KeyMap[(int)ImGuiKey.Escape] = (int) Keys.Escape;
+            io.KeyMap[(int)ImGuiKey.A] = (int) Keys.A;
+            io.KeyMap[(int)ImGuiKey.C] = (int) Keys.C;
+            io.KeyMap[(int)ImGuiKey.V] = (int) Keys.V;
+            io.KeyMap[(int)ImGuiKey.X] = (int) Keys.X;
+            io.KeyMap[(int)ImGuiKey.Y] = (int) Keys.Y;
+            io.KeyMap[(int)ImGuiKey.Z] = (int) Keys.Z;
+            #endregion
         }
 
         public void GetNewFrame()
@@ -189,29 +220,41 @@ namespace Capture.GUI
             UpdateImGuiInput(io);
             ImGui.Render();
             var data = ImGui.GetDrawData();
-            ImGuiRenderDraw(data);
+            ImGuiRenderDraw(data.NativePtr);
         }
 
-        private void UpdateImGuiInput(IO io)
+        private void UpdateImGuiInput(ImGuiIOPtr iso)
         {
+            var io = ImGui.GetIO();
             if (NativeMethods.IsWindowInForeground(_windowHandle))
             {
-                io.MousePosition = new Vector2(mouseState.X / io.DisplayFramebufferScale.X,
+                io.MousePos = new Vector2(mouseState.X / io.DisplayFramebufferScale.X,
                     mouseState.Y / io.DisplayFramebufferScale.Y);
             }
             else
             {
-                io.MousePosition = new Vector2(-1f, -1f);
+                io.MousePos = new Vector2(-1f, -1f);
             }
-
             io.MouseDown[0] = mouseState.LMB;
             io.MouseDown[1] = mouseState.RMB;
             io.MouseDown[2] = mouseState.MMB;
-
             io.MouseWheel = mouseState.Wheel;
             mouseState.Wheel = 0;
+            
+            
+            //if (true)
+            //{
+            //    foreach (var i in KeyDown)
+            //    {
+            //        io.KeysDown[i.Key] = i.Value;
+            //    }
+            //    foreach (var i in keyInput)
+            //        io.AddInputCharacter(i);
+            //    keyInput.Clear();
+            //    KeyDown.Clear();
+            //}
         }
-        private unsafe void ImGuiRenderDraw(DrawData* drawData)
+        private unsafe void ImGuiRenderDraw(ImDrawData* drawData)
         {
             if (drawData == null)
                 return;
@@ -270,7 +313,7 @@ namespace Capture.GUI
                 for (var n = 0; n < drawData->CmdListsCount; n++)
                 {
                     var cmdList = drawData->CmdLists[n];
-                    var vtx_buffer = (DrawVert*) cmdList->VtxBuffer.Data;
+                    var vtx_buffer = (ImDrawVert*) cmdList->VtxBuffer.Data;
                     var idx_buffer = (ushort*) cmdList->IdxBuffer.Data;
 
                     var myCustomVertices = new GuiVertex[cmdList->VtxBuffer.Size];
@@ -286,7 +329,7 @@ namespace Capture.GUI
 
                     for (var i = 0; i < cmdList->CmdBuffer.Size; i++)
                     {
-                        var pcmd = &((DrawCmd*) cmdList->CmdBuffer.Data)[i];
+                        var pcmd = &((ImDrawCmd*) cmdList->CmdBuffer.Data)[i];
                         
                         if (pcmd->UserCallback != IntPtr.Zero) throw new NotImplementedException();
                         //Trace.WriteLine(pcmd->TextureId.ToString());
@@ -313,8 +356,7 @@ namespace Capture.GUI
             try
             {
                 var io = ImGui.GetIO();
-                io.FontAtlas.Clear();
-                ImGui.Shutdown();
+                io.Fonts.Clear();
                 UnhookWindowsHookEx(hHook);
                 if (texNative.NativePointer != IntPtr.Zero)
                     Marshal.Release(texNative.NativePointer);

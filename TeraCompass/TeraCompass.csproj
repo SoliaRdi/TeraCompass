@@ -149,12 +149,14 @@
     <None Include="resources\data\opcodes\protocol.336874.map">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="resources\data\opcodes\protocol.339843.map" />
     <None Include="resources\data\opcodes\sysmsg.334245.map">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="resources\data\opcodes\sysmsg.71.map" />
     <None Include="resources\data\opcodes\sysmsg.72.map" />
     <None Include="resources\data\opcodes\sysmsg.74.map" />
+    <None Include="resources\data\opcodes\sysmsg.76.map" />
     <None Include="resources\data\sys_msg\sys_msg-EU-EN.tsv" />
     <None Include="resources\data\sys_msg\sys_msg-EU-FR.tsv" />
     <None Include="resources\data\sys_msg\sys_msg-EU-GER.tsv" />
@@ -170,6 +172,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="cimgui.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="EasyHook32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

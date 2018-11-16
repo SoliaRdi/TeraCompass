@@ -76,11 +76,6 @@ namespace Capture.TeraModule.Settings
         [Trackable]
         public Dictionary<RelationType, uint> RelationColors { get; set; }
 
-        public float[] R { get; set; }
-        public float[] G { get; set; }
-        public float[] B { get; set; }
-        public float[] A { get; set; }
-
         public HashSet<RelationType> FriendlyTypes = new HashSet<RelationType>
         {
             RelationType.Casual, RelationType.GuildMember, RelationType.MyRaid, RelationType.RaidMyParty
@@ -90,6 +85,7 @@ namespace Capture.TeraModule.Settings
         public bool _filterByClasses;
         public bool _showNicknames;
         public bool _showFps;
+        public bool _markGuildAsAlly;
         public bool _showRenderTime;
         public float _zoom;
         public int _playerSize;
@@ -112,15 +108,13 @@ namespace Capture.TeraModule.Settings
                 {RelationType.MyRaid, Color.FromArgb(33, 214, 33).ToARGB()},
                 {RelationType.Dead, Color.FromArgb(75, 79, 79).ToARGB()},
             };
-            R = new float[RelationColors.Keys.Count];
-            G = new float[RelationColors.Keys.Count];
-            B = new float[RelationColors.Keys.Count];
-            A = new float[RelationColors.Keys.Count];
             FilterByClasses = false;
             ShowNicknames = false;
             ShowFPS = false;
             ShowRenderTime = false;
+            MarkGuildAsAlly = false;
             FilteredClasses = new HashSet<PlayerClass>();
+            MyGuildName = "";
         }
 
         [Trackable]
@@ -136,7 +130,15 @@ namespace Capture.TeraModule.Settings
             get => _showNicknames;
             set => _showNicknames = value;
         }
+        [Trackable]
+        public bool MarkGuildAsAlly
+        {
+            get => _markGuildAsAlly;
+            set => _markGuildAsAlly = value;
+        }
 
+        [Trackable]
+        public string MyGuildName { get; set; } = "";
         [Trackable]
         public bool ShowFPS
         {

@@ -322,11 +322,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj">
-      <Project>{bb8cbd02-ce8b-4976-afcc-194151d319a7}</Project>
+      <Project>{33264b48-bc2e-4d4c-9ce9-2221782b18cf}</Project>
       <Name>ImGui.NET</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

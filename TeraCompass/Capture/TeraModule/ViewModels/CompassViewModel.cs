@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using System.Threading.Tasks;
 using Capture.GUI;
 using Capture.Hook;
@@ -53,6 +54,9 @@ namespace Capture.TeraModule.ViewModels
             {
                 var entity = (UserEntity) obj;
                 var founded = PlayerModels.TryGetValue(obj.Id, out var model);
+                if (Services.CompassSettings.MarkGuildAsAlly&&entity.Relation==RelationType.PK
+                                                            &&entity.GuildName == Services.CompassSettings.MyGuildName)
+                    entity.Relation = RelationType.GuildMember;
                 if (!founded)
                 {
                     model = new PlayerModel(entity);
@@ -112,20 +116,21 @@ namespace Capture.TeraModule.ViewModels
             if (Services.CompassSettings.OverlayCorner != -1)
             {
                 CompassPosition = new Vector2(Services.CompassSettings.DISTANCE,Services.CompassSettings.DISTANCE);
-                ImGui.SetNextWindowPos(CompassPosition, Condition.Always);
+                ImGui.SetNextWindowPos(CompassPosition, ImGuiCond.Always);
             }
 
-            ImGui.SetNextWindowSize(CompassSize, Condition.Always);
+            ImGui.SetNextWindowSize(CompassSize, ImGuiCond.Always);
             ImGuiNative.igSetNextWindowContentSize(CompassSize);
-            ImGui.PushStyleVar(StyleVar.WindowPadding, Vector2.Zero);
-            if (ImGui.BeginWindow("Overlay", ref Services.CompassSettings.OverlayOpened, Vector2.Zero, 0,
-                (Services.CompassSettings.OverlayCorner != -1 ? WindowFlags.NoMove : 0) | WindowFlags.NoTitleBar | WindowFlags.NoResize | WindowFlags.NoBringToFrontOnFocus | WindowFlags.NoFocusOnAppearing|WindowFlags.NoScrollbar))
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+            ImGui.SetNextWindowBgAlpha(0);
+            
+            if (ImGui.Begin("Overlay", ref Services.CompassSettings.OverlayOpened,(Services.CompassSettings.OverlayCorner != -1 ? ImGuiWindowFlags.NoMove : 0) | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoFocusOnAppearing| ImGuiWindowFlags.NoScrollbar))
             {
                 //var draw_list = ImGui.GetOverlayDrawList();
-                var draw_list = DrawList.GetForCurrentWindow();
-                CompassPosition = ImGui.GetWindowPosition();
+                var draw_list = ImGui.GetWindowDrawList();
+                CompassPosition = ImGui.GetWindowPos();
                 ImGui.PopStyleVar();
-                if (ImGuiNative.igBeginPopupContextWindow("Options", 1, true))
+                if (ImGui.BeginPopupContextWindow("Options", 1, true))
                 {
                     if (ImGui.MenuItem("Custom position", null, Services.CompassSettings.OverlayCorner == -1, true))
                         Services.CompassSettings.OverlayCorner = -1;
@@ -162,27 +167,36 @@ namespace Capture.TeraModule.ViewModels
                 draw_list.AddLine(WindowCenter, final, Color.FromArgb(120, 255, 255, 255).ToDx9ARGB(), 1f);
                 
                 var values = PlayerModels.Values.ToArray();
+                int deadenemy = 0,deadally=0, enemy = 0, ally = 0;
                 for (var i = 0; i < values.Length; i++)
                 {
-                    if (Services.CompassSettings.CaptureOnlyEnemy && Services.CompassSettings.FriendlyTypes.Contains(values[i].Relation)) continue;
                     if (Services.CompassSettings.FilterByClasses && Services.CompassSettings.FilteredClasses.Contains(values[i].PlayerClass))
                         continue;
                     uint color;
+                    var friendly = Services.CompassSettings.FriendlyTypes.Contains(values[i].Relation);
                     if (values[i].Dead)
                     {
                         Services.CompassSettings.RelationColors.TryGetValue(RelationType.Dead, out color);
+                        if (friendly)
+                            deadally++;
+                        else
+                            deadenemy++;
                     }
                     else
                     {
+                        if (friendly)
+                            ally++;
+                        else
+                            enemy++;
                         if (!Services.CompassSettings.RelationColors.TryGetValue(values[i].Relation, out color))
                             Services.CompassSettings.RelationColors.TryGetValue(RelationType.Unknown, out color);
                     }
-                    
+                    if(friendly&&Services.CompassSettings.CaptureOnlyEnemy) continue;
 
                     var ScreenPosition = GetScreenPos(values[i]);
 
                     color = color.ToDx9ARGB();
-
+                    
                     draw_list.AddCircleFilled(
                         new Vector2(CompassPosition.X+ScreenPosition.X, CompassPosition.Y+ScreenPosition.Y),
                         Services.CompassSettings.PlayerSize, color, Services.CompassSettings.PlayerSize * 2);
@@ -190,13 +204,21 @@ namespace Capture.TeraModule.ViewModels
                     if (Services.CompassSettings.ShowNicknames)
                         draw_list.AddText(
                             new Vector2(CompassPosition.X+ScreenPosition.X - values[i].Name.Length * 4 / 2f,
-                                CompassPosition.Y+ScreenPosition.Y + Services.CompassSettings.PlayerSize), $"{values[i].Name}",
-                            color);
+                                CompassPosition.Y+ScreenPosition.Y + Services.CompassSettings.PlayerSize), color, $"{values[i].Name}");
                     
                 }
+                ImGuiNative.igSetCursorPosY(CompassSize.Y- ImGuiNative.igGetTextLineHeight());
+                //ImGui::BeginChild("item view", ImVec2(0, -)); // Leave room for 1 line below us
+                //ImGui.SetCursorScreenPos
+                
+                ImGui.TextColored(Color.Green.ToVector4(),$"{ally}");
+                ImGui.SameLine();
+                ImGui.TextColored(Color.Red.ToVector4(),$"{enemy}");
+                ImGui.SameLine();
+                ImGui.TextColored(Color.Gray.ToVector4(),$"{deadally}|{deadenemy}");
             }
 
-            ImGui.EndWindow();
+            ImGui.End();
             
             if (PacketProcessor.Instance.EntityTracker.CompassUser.Status==1&&DXHookD3D9._imageCache.TryGetValue("incombat.png", out var texture))
                 sprite.Draw(texture,new SharpDX.Mathematics.Interop.RawColorBGRA(255,255,255,255),null,null,
@@ -212,9 +234,10 @@ namespace Capture.TeraModule.ViewModels
 
                     if (GuldList.Count > 0)
                     {
-                        ImGui.SetNextWindowPos(new Vector2(CompassPosition.X, CompassPosition.Y + CompassSize.Y), Condition.Always);
-                        if (ImGui.BeginWindow("Guilds", ref Services.CompassSettings.OverlayOpened, new Vector2(350, 200), 0.3f,
-                            WindowFlags.NoTitleBar | WindowFlags.NoFocusOnAppearing))
+                        ImGui.SetNextWindowPos(new Vector2(CompassPosition.X, CompassPosition.Y + CompassSize.Y), ImGuiCond.Always);
+                        ImGui.SetNextWindowBgAlpha(0.3f);
+                        ImGui.SetNextWindowSize(new Vector2(350, 200));
+                        if (ImGui.Begin("Guilds", ref Services.CompassSettings.OverlayOpened,ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoFocusOnAppearing))
                         {
                             ImGui.BeginChild("left pane", new Vector2(150, 0), true);
 
@@ -255,28 +278,42 @@ namespace Capture.TeraModule.ViewModels
                             ImGuiNative.igEndGroup();
                         }
 
-                        ImGui.EndWindow();
+                        ImGui.End();
                     }
                 }
 
             if (Services.CompassSettings.SettingsOpened)
             {
-                if (ImGui.BeginWindow("Settings", ref Services.CompassSettings.SettingsOpened, new Vector2(350, 400), 0.3f,
-                    WindowFlags.NoFocusOnAppearing | WindowFlags.AlwaysAutoResize))
+                ImGui.SetNextWindowBgAlpha(0.3f);
+                ImGui.SetNextWindowSize(new Vector2(350, 400));
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 1);
+                if (ImGui.Begin("Settings", ref Services.CompassSettings.SettingsOpened,
+                    ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.AlwaysAutoResize))
                 {
                     ImGui.Checkbox("Guild statistic", ref Services.CompassSettings.StatisticsOpened);
                     ImGui.Checkbox("Show only enemy players", ref Services.CompassSettings.CaptureOnlyEnemy);
                     ImGui.Checkbox("Filter by classes", ref Services.CompassSettings._filterByClasses);
                     ImGui.Checkbox("Show nicknames", ref Services.CompassSettings._showNicknames);
-                    ImGui.Checkbox("Show fps", ref Services.CompassSettings._showFps);
-                    ImGui.Checkbox("Show render time", ref Services.CompassSettings._showRenderTime);
+                    
+
                     ImGui.SliderFloat("Zoom", ref Services.CompassSettings._zoom, 1, 20, $"Zoom={Services.CompassSettings.Zoom}", 2f);
-                    if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
+                    if (ImGui.IsItemActive() || ImGui.IsItemHovered())
                         ImGui.SetTooltip($"{Services.CompassSettings.Zoom:F2}");
                     ImGui.SliderInt("PlayerSize", ref Services.CompassSettings._playerSize, 1, 10, $"PlayerSize = {Services.CompassSettings.PlayerSize}");
-                    if (ImGui.IsLastItemActive() || ImGui.IsItemHovered(HoveredFlags.Default))
+                    if (ImGui.IsItemActive() || ImGui.IsItemHovered())
                         ImGui.SetTooltip($"{Services.CompassSettings.PlayerSize}");
-                    if (ImGui.CollapsingHeader("Settings for filter by class            ", TreeNodeFlags.CollapsingHeader | TreeNodeFlags.AllowItemOverlap))
+                    if (ImGui.CollapsingHeader("Customize relations", ImGuiTreeNodeFlags.CollapsingHeader))
+                    {
+                        byte[] buffer = Encoding.UTF8.GetBytes(Services.CompassSettings.MyGuildName);
+                        Array.Resize<byte>(ref buffer, 20);
+                        if (ImGui.InputText("MyGuildName", buffer,20))
+                        {
+                            Services.CompassSettings.MyGuildName=Encoding.UTF8.GetString(buffer).TrimEnd('\0');
+                        }
+                        ImGui.Checkbox("Guild members always friendly", ref Services.CompassSettings._markGuildAsAlly);
+                    }
+
+                    if (ImGui.CollapsingHeader("Settings for filter by class            ", ImGuiTreeNodeFlags.CollapsingHeader | ImGuiTreeNodeFlags.AllowItemOverlap))
                     {
                         ImGui.TextUnformatted("Common ignored");
                         ImGui.Columns(3, null, false);
@@ -294,33 +331,36 @@ namespace Capture.TeraModule.ViewModels
                         ImGui.Columns(1, null, false);
                     }
 
-                    if (ImGui.CollapsingHeader("Colors for player relation", TreeNodeFlags.CollapsingHeader))
+                    if (ImGui.CollapsingHeader("Colors for player relation", ImGuiTreeNodeFlags.CollapsingHeader))
                     {
                         var keys = Services.CompassSettings.RelationColors.Keys.ToArray();
                         for (var i = 0; i < keys.Length; i++)
                         {
                             Services.CompassSettings.RelationColors.TryGetValue(keys[i], out var color);
-                            Services.CompassSettings.R[i] = ((color >> 16) & 255) / 255f;
-                            Services.CompassSettings.G[i] = ((color >> 8) & 255) / 255f;
-                            Services.CompassSettings.B[i] = ((color >> 0) & 255) / 255f;
-                            Services.CompassSettings.A[i] = ((color >> 24) & 255) / 255f;
                             ImGui.TextUnformatted(keys[i].ToString());
                             ImGui.SameLine();
-                            ImGui.ColorEdit4(keys[i].ToString(), ref Services.CompassSettings.R[i], ref Services.CompassSettings.G[i], ref Services.CompassSettings.B[i],
-                                ref Services.CompassSettings.A[i],
-                                ColorEditFlags.NoInputs | ColorEditFlags.RGB | ColorEditFlags.NoLabel);
+                            Vector4 vector4 = new Vector4(((color >> 16) & 255) / 255f, ((color >> 8) & 255) / 255f,
+                                ((color >> 0) & 255) / 255f, ((color >> 24) & 255) / 255f);
+                            ImGui.ColorEdit4(keys[i].ToString(),ref vector4,
+                                ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.RGB | ImGuiColorEditFlags.NoLabel);
 
-                            uint mr = Services.CompassSettings.R[i] >= 1.0 ? 255 :
-                                    Services.CompassSettings.R[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.R[i] * 255f),
-                                mg = Services.CompassSettings.G[i] >= 1.0 ? 255 :
-                                    Services.CompassSettings.G[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.G[i] * 255f),
-                                mb = Services.CompassSettings.B[i] >= 1.0 ? 255 :
-                                    Services.CompassSettings.B[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.B[i] * 255f),
-                                ma = Services.CompassSettings.A[i] >= 1.0 ? 255 :
-                                    Services.CompassSettings.A[i] <= 0.0 ? 0 : (uint) Math.Round(Services.CompassSettings.A[i] * 255f);
+                            uint mr = vector4.X >= 1.0 ? 255 :
+                                    vector4.X <= 0.0 ? 0 : (uint) Math.Round(vector4.X * 255f),
+                                mg = vector4.Y >= 1.0 ? 255 :
+                                    vector4.Y <= 0.0 ? 0 : (uint) Math.Round(vector4.Y * 255f),
+                                mb = vector4.Z>= 1.0 ? 255 :
+                                    vector4.Z <= 0.0 ? 0 : (uint) Math.Round(vector4.Z * 255f),
+                                ma = vector4.W >= 1.0 ? 255 :
+                                    vector4.W <= 0.0 ? 0 : (uint) Math.Round(vector4.W * 255f);
 
                             Services.CompassSettings.RelationColors[keys[i]] = (ma << 24) | (mr << 16) | (mg << 8) | (mb << 0);
                         }
+                    }
+
+                    if (ImGui.CollapsingHeader("Debug options", ImGuiTreeNodeFlags.CollapsingHeader))
+                    {
+                        ImGui.Checkbox("Show fps", ref Services.CompassSettings._showFps);
+                        ImGui.Checkbox("Show render time", ref Services.CompassSettings._showRenderTime);
                     }
 
                     if (ImGui.Button("Save settings"))
@@ -337,7 +377,8 @@ namespace Capture.TeraModule.ViewModels
 
                 }
 
-                ImGui.EndWindow();
+                ImGui.End();
+                ImGui.PopStyleVar();
             }
         }
     }

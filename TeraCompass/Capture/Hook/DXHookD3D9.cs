@@ -164,6 +164,13 @@ namespace Capture.Hook
         {
             lock (_lockRenderTarget)
             {
+                try { 
+                    _sprite.End();
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
 
                 if (imGuiRender != null)
                     RemoveAndDispose(ref imGuiRender);
@@ -264,26 +271,31 @@ namespace Capture.Hook
                         {
                             PerfomanseTester.Reset();
                             PerfomanseTester.Start();
-                        }
+                        }else if(PerfomanseTester.IsRunning)
+                            PerfomanseTester.Stop();
 
                         _sprite.Begin(SpriteFlags.AlphaBlend);
+                        
                         imGuiRender.GetNewFrame();
 
                         var CompassViewModel = PacketProcessor.Instance?.CompassViewModel;
                         CompassViewModel?.Render(_sprite);
-
+                        ImGui.ShowDemoWindow();
                         if (Services.CompassSettings.ShowRenderTime)
                         {
                             var draw_list = ImGui.GetOverlayDrawList();
-                            draw_list.AddText(new Vector2(10, 100), $"RenderingTime(ms) = {Elapsed.Milliseconds}", Color.Red.ToDx9ARGB());
+                            draw_list.AddText(new Vector2(10, 100), Color.Red.ToDx9ARGB(), $"RenderingTime(ms) = {Elapsed.Milliseconds}");
                         }
-                        if (Services.CompassSettings.ShowFPS) { 
-                            if (ImGui.BeginWindow("FPS counter",ref Services.CompassSettings._showFps,0, WindowFlags.NoResize | WindowFlags.NoTitleBar | WindowFlags.AlwaysAutoResize))
+                        if (Services.CompassSettings.ShowFPS)
+                        {
+                            ImGui.SetNextWindowBgAlpha(0);
+                            
+                            if (ImGui.Begin("FPS counter",ref Services.CompassSettings._showFps, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize))
                             {
                                 ImGui.SetWindowFontScale(1.3F);
                                 ImGui.Text($"{FPS.GetFPS():n0} fps");
                             }
-                            ImGui.EndWindow();
+                            ImGui.End();
                         }
                         _sprite.End();
                         imGuiRender.Draw();
