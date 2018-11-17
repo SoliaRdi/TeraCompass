@@ -17,7 +17,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
             Level = reader.ReadInt16();
             reader.BaseStream.Position = nameOffset - 4;
             Name = reader.ReadTeraString();
-//            Trace.WriteLine(Name + ":" + BitConverter.ToString(BitConverter.GetBytes(Id.Id)) + ":" + ServerId.ToString() + " " + BitConverter.ToString(BitConverter.GetBytes(PlayerId)));
+            //            Trace.WriteLine(Name + ":" + BitConverter.ToString(BitConverter.GetBytes(Id.Id)) + ":" + ServerId.ToString() + " " + BitConverter.ToString(BitConverter.GetBytes(PlayerId)));
         }
 
         public EntityId Id { get; private set; }
@@ -25,6 +25,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
         public uint PlayerId { get; private set; }
         public int Level { get; private set; }
         public string Name { get; private set; }
+        public string GuildName { get; private set; }
         public RaceGenderClass RaceGenderClass { get; }
     }
 }

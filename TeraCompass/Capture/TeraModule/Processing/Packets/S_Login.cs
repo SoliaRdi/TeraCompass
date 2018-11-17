@@ -26,7 +26,7 @@ namespace Capture.TeraModule.Processing.Packets
                     }
                     catch
                     {
-                        Trace.WriteLine(
+                        Trace.Write(
                             "New server:" + PacketProcessor.Instance.Server + ";Old server Id:" + PacketProcessor.Instance.EntityTracker.CompassUser?.ServerId);
                         throw;
                     }

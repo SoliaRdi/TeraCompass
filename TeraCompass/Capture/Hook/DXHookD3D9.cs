@@ -164,12 +164,13 @@ namespace Capture.Hook
         {
             lock (_lockRenderTarget)
             {
-                try { 
+                try
+                {
                     _sprite.End();
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    // ignored
+                    Trace.Write(e.InnerException);
                 }
 
                 if (imGuiRender != null)
@@ -271,20 +272,20 @@ namespace Capture.Hook
                         {
                             PerfomanseTester.Reset();
                             PerfomanseTester.Start();
-                        }else if(PerfomanseTester.IsRunning)
+                        }
+                        else if (PerfomanseTester.IsRunning)
                             PerfomanseTester.Stop();
 
                         _sprite.Begin(SpriteFlags.AlphaBlend);
                         
                         imGuiRender.GetNewFrame();
-
                         var CompassViewModel = PacketProcessor.Instance?.CompassViewModel;
                         CompassViewModel?.Render(_sprite);
-                        ImGui.ShowDemoWindow();
+                        //ImGui.ShowDemoWindow();
                         if (Services.CompassSettings.ShowRenderTime)
                         {
                             var draw_list = ImGui.GetOverlayDrawList();
-                            draw_list.AddText(new Vector2(10, 100), Color.Red.ToDx9ARGB(), $"RenderingTime(ms) = {Elapsed.Milliseconds}");
+                            draw_list.AddText(new Vector2(10, 100),  $"RenderingTime(ms) = {Elapsed.Milliseconds}",Color.Red.ToDx9ARGB());
                         }
                         if (Services.CompassSettings.ShowFPS)
                         {

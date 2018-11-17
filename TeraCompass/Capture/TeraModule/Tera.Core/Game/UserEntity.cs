@@ -33,6 +33,7 @@ namespace TeraCompass.Tera.Core.Game
         {
             Name = message.Name;
             RaceGenderClass = message.RaceGenderClass;
+            GuildName = message.GuildName;
             PlayerId = message.PlayerId;
             ServerId = message.ServerId;
             Level = message.Level;

@@ -55,7 +55,7 @@ namespace Capture.GUI
 
         int hHook;
         HookProc hp;
-        private static bool _captureKeyboard;
+            //private static bool _captureKeyboard;
 
         [DllImport("user32", SetLastError = true)]
         static extern int SetWindowsHookEx(HookType iHook, HookProc proc, IntPtr hMod, int threadId);
@@ -75,12 +75,9 @@ namespace Capture.GUI
             var cp = Process.GetCurrentProcess();
             var mName = Path.GetFileNameWithoutExtension(cp.MainModule.ModuleName);
             hHook = SetWindowsHookEx(HookType.WH_GETMESSAGE, hp, GetModuleHandle(mName), cp.Threads[0].Id);
-            IntPtr context = ImGui.CreateContext();
-            ImGui.SetCurrentContext(context);
+            ImGui.CreateContext();
             var io = ImGui.GetIO();
             io.DisplaySize= new Vector2(windowRect.Right - windowRect.Left, windowRect.Bottom - windowRect.Top);
-            io.WantCaptureKeyboard = true;
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
             ImGui.GetStyle().WindowBorderSize=0;
             PrepareTextureImGui();
             SetupKeyMapping(io);
@@ -160,22 +157,16 @@ namespace Capture.GUI
         private unsafe void PrepareTextureImGui()
         {
             var io = ImGui.GetIO();
-            char[] ranges =
-            {
-                (char) 0x0020, (char) 0x052F // Basic Latin + Latin Supplement + Cyrillic + Cyrillic Supplement
-            };
-            fixed (char* pChars = ranges)
-            {
-                io.Fonts.AddFontFromFileTTF("C:\\Windows\\Fonts\\tahoma.ttf", 12f, null,(IntPtr)pChars);
-            }
             
-            io.Fonts.GetTexDataAsRGBA32(out byte* pixels, out int width, out int height,out int bytes_per_pixel);
+            io.Fonts.AddFontFromFileTTF("C:\\Windows\\Fonts\\tahoma.ttf", 12f,null, io.Fonts.GetGlyphRangesCyrillic());
+
+            io.Fonts.GetTexDataAsRGBA32(out byte* pixels, out int width, out int height, out int bytes_per_pixel);
             var t = new Texture(device, width, height, 1, Usage.Dynamic,
                 Format.A8R8G8B8, Pool.Default);
             var rect = t.LockRectangle(0, LockFlags.None);
-            
+
             for (var y = 0; y < height; y++)
-                memcpy((byte*) (rect.DataPointer + rect.Pitch * y),
+                memcpy((byte*)(rect.DataPointer + rect.Pitch * y),
                     pixels + width * bytes_per_pixel * y,
                     width * bytes_per_pixel);
             t.UnlockRectangle(0);
@@ -217,10 +208,11 @@ namespace Capture.GUI
         public unsafe void Draw()
         {
             var io = ImGui.GetIO();
+            
             UpdateImGuiInput(io);
             ImGui.Render();
             var data = ImGui.GetDrawData();
-            ImGuiRenderDraw(data.NativePtr);
+            ImGuiRenderDraw(data);
         }
 
         private void UpdateImGuiInput(ImGuiIOPtr iso)
@@ -254,10 +246,12 @@ namespace Capture.GUI
             //    KeyDown.Clear();
             //}
         }
-        private unsafe void ImGuiRenderDraw(ImDrawData* drawData)
+        private unsafe void ImGuiRenderDraw(ImDrawDataPtr drawData)
         {
-            if (drawData == null)
+            if (drawData.CmdListsCount == 0)
+            {
                 return;
+            }
             var io = ImGui.GetIO();
             if (io.DisplaySize.X <= 0.0f || io.DisplaySize.Y <= 0.0f)
                 return;
@@ -310,40 +304,44 @@ namespace Capture.GUI
             }
             using (device.VertexDeclaration = new VertexDeclaration(device, GuiVertex.VertexElements))
             {
-                for (var n = 0; n < drawData->CmdListsCount; n++)
+                for (var n = 0; n < drawData.CmdListsCount; n++)
                 {
-                    var cmdList = drawData->CmdLists[n];
-                    var vtx_buffer = (ImDrawVert*) cmdList->VtxBuffer.Data;
-                    var idx_buffer = (ushort*) cmdList->IdxBuffer.Data;
-
-                    var myCustomVertices = new GuiVertex[cmdList->VtxBuffer.Size];
+                    ImDrawListPtr cmdList = drawData.CmdListsRange[n];
+                    var vtx_buffer = (ImDrawVert*)cmdList.VtxBuffer.Data;
+                    var idx_buffer = (ushort*)cmdList.IdxBuffer.Data;
+                    
+                    var myCustomVertices = new GuiVertex[cmdList.VtxBuffer.Size];
 
                     for (var i = 0; i < myCustomVertices.Length; i++)
                     {
-                        var cl = (vtx_buffer[i].col & 0xFF00FF00) | ((vtx_buffer[i].col & 0xFF0000) >> 16) |
-                                 ((vtx_buffer[i].col & 0xFF) << 16);
-                        myCustomVertices[i] =
-                            new GuiVertex(vtx_buffer[i].pos.X, vtx_buffer[i].pos.Y, vtx_buffer[i].uv.X,
-                                vtx_buffer[i].uv.Y, cl);
+                        if (vtx_buffer != null)
+                        {
+                            var cl = (vtx_buffer[i].col & 0xFF00FF00) | ((vtx_buffer[i].col & 0xFF0000) >> 16) |
+                                     ((vtx_buffer[i].col & 0xFF) << 16);
+                            myCustomVertices[i] =
+                                new GuiVertex(vtx_buffer[i].pos.X, vtx_buffer[i].pos.Y, vtx_buffer[i].uv.X,
+                                    vtx_buffer[i].uv.Y, cl);
+                        }
                     }
 
-                    for (var i = 0; i < cmdList->CmdBuffer.Size; i++)
+                    for (var i = 0; i < cmdList.CmdBuffer.Size; i++)
                     {
-                        var pcmd = &((ImDrawCmd*) cmdList->CmdBuffer.Data)[i];
-                        
-                        if (pcmd->UserCallback != IntPtr.Zero) throw new NotImplementedException();
-                        //Trace.WriteLine(pcmd->TextureId.ToString());
-                        device.SetTexture(0, new Texture(pcmd->TextureId));
-                        device.ScissorRect = new RectangleF((int) pcmd->ClipRect.X,
-                            (int) pcmd->ClipRect.Y,
-                            (int) (pcmd->ClipRect.Z - pcmd->ClipRect.X),
-                            (int) (pcmd->ClipRect.W - pcmd->ClipRect.Y));
-                        var indices = new ushort[pcmd->ElemCount];
-                        for (var j = 0; j < indices.Length; j++) indices[j] = idx_buffer[j];
+                        ImDrawCmdPtr drawCmd = cmdList.CmdBuffer[i];
+
+                        if (drawCmd.UserCallback != IntPtr.Zero) throw new NotImplementedException();
+                        device.SetTexture(0, new Texture(drawCmd.TextureId));
+                        device.ScissorRect = new RectangleF((int)drawCmd.ClipRect.X,
+                            (int)drawCmd.ClipRect.Y,
+                            (int) (drawCmd.ClipRect.Z - drawCmd.ClipRect.X),
+                            (int) (drawCmd.ClipRect.W - drawCmd.ClipRect.Y));
+                        var indices = new ushort[drawCmd.ElemCount];
+                        for (var j = 0; j < indices.Length; j++)
+                            if (idx_buffer != null)
+                                indices[j] = idx_buffer[j];
 
                         device.DrawIndexedUserPrimitives(PrimitiveType.TriangleList, 0, myCustomVertices.Length,
-                            (int) (pcmd->ElemCount / 3), indices, Format.Index16, myCustomVertices);
-                        idx_buffer += pcmd->ElemCount;
+                            (int)(drawCmd.ElemCount / 3), indices, Format.Index16, myCustomVertices);
+                        idx_buffer += drawCmd.ElemCount;
                     }
                 }
             }
@@ -357,6 +355,7 @@ namespace Capture.GUI
             {
                 var io = ImGui.GetIO();
                 io.Fonts.Clear();
+                ImGui.DestroyContext();
                 UnhookWindowsHookEx(hHook);
                 if (texNative.NativePointer != IntPtr.Zero)
                     Marshal.Release(texNative.NativePointer);

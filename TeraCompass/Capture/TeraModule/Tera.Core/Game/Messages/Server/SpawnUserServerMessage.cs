@@ -1,4 +1,5 @@
-﻿using TeraCompass.Tera.Core.Game.Services;
+﻿using System.Text;
+using TeraCompass.Tera.Core.Game.Services;
 
 namespace TeraCompass.Tera.Core.Game.Messages.Server
 {

@@ -30,7 +30,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                 case 0:
                 case 1:
                     var paletteSize = BitConverter.ToInt32(logo, 16);
-                    if (paletteSize>=size-24) { Trace.WriteLine("palette size too big"); return;}
+                    if (paletteSize>=size-24) { Trace.Write("palette size too big"); return;}
                     for (var i = 0; i < paletteSize; i++)
                     {
                         palette.Entries[i] = Color.FromArgb(logo[0x14 + i * 3], logo[0x15 + i * 3], logo[0x16 + i * 3]);
@@ -46,10 +46,10 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                     length = BitConverter.ToInt32(logo, 16);
                     break;
                 default:
-                    Trace.WriteLine("Unknown guild logo format");
+                    Trace.Write("Unknown guild logo format");
                     return;
             }
-            if (length>=size+20 || length!=width*width) { Trace.WriteLine("length mismatch"); return; }
+            if (length>=size+20 || length!=width*width) { Trace.Write("length mismatch"); return; }
             var pixels = GuildLogo.LockBits(new Rectangle(0, 0, width, width), ImageLockMode.WriteOnly, GuildLogo.PixelFormat);
             Marshal.Copy(logo, size-length, pixels.Scan0, length);
             GuildLogo.UnlockBits(pixels);

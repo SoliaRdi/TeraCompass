@@ -73,7 +73,7 @@ namespace Capture.TeraModule.Processing
         {
             NeedInit = true;
             MessageFactory = new MessageFactory();
-            Trace.WriteLine("ConnectionEnded");
+            Trace.Write("ConnectionEnded");
         }
 
         private void HandleNewConnection(Server server)

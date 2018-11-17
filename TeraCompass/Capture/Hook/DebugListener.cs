@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ namespace Capture.Hook
 
         public override void WriteLine(string message)
         {
-            _captureInterface.Message(MessageType.Debug, message);
+            File.AppendAllText("debug.log", message);
         }
     }
 }

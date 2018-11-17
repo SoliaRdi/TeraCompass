@@ -28,7 +28,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Client
                 offset = nextOffset;
             }
 
-            Trace.WriteLine(BasicTeraData.Instance.ResourceDirectory);
+            Trace.Write(BasicTeraData.Instance.ResourceDirectory);
             {
                 if (!Directory.Exists(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/")))
                     Directory.CreateDirectory(Path.Combine(BasicTeraData.Instance.ResourceDirectory, $"data/opcodes/"));
@@ -50,7 +50,7 @@ namespace TeraCompass.Tera.Core.Game.Messages.Client
                     Trace.Write("Client Proxy overhead: " + TeraSniffer.Instance.ClientProxyOverhead + "\r\nServer Proxy overhead: " +
                                 TeraSniffer.Instance.ServerProxyOverhead);
                 }
-                Trace.WriteLine("protocol version = " + Versions[0]);
+                Trace.Write("protocol version = " + Versions[0]);
             }
             //Trace.WriteLine(Versions.Aggregate(new StringBuilder(), (sb, x) => sb.Append(x.Key + " - " + x.Value + " | "), sb => sb.ToString(0, sb.Length - 1)));
         }

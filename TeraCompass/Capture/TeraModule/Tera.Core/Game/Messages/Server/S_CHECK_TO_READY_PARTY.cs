@@ -39,10 +39,10 @@ namespace TeraCompass.Tera.Core.Game.Messages.Server
                 offset = nextOffset;
             }
 
-            Trace.WriteLine($"Count:{Count}");
+            Trace.Write($"Count:{Count}");
             foreach(ReadyPartyMembers menber in Party)
             {
-                Trace.WriteLine($"ServerId:{BitConverter.ToString(BitConverter.GetBytes(menber.ServerId))}, PlayerId:{BitConverter.ToString(BitConverter.GetBytes(menber.PlayerId))}, State:{menber.Status}");
+                Trace.Write($"ServerId:{BitConverter.ToString(BitConverter.GetBytes(menber.ServerId))}, PlayerId:{BitConverter.ToString(BitConverter.GetBytes(menber.PlayerId))}, State:{menber.Status}");
             }
         }
 

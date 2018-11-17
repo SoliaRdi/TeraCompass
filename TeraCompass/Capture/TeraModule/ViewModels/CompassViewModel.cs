@@ -54,8 +54,8 @@ namespace Capture.TeraModule.ViewModels
             {
                 var entity = (UserEntity) obj;
                 var founded = PlayerModels.TryGetValue(obj.Id, out var model);
-                if (Services.CompassSettings.MarkGuildAsAlly&&entity.Relation==RelationType.PK
-                                                            &&entity.GuildName == Services.CompassSettings.MyGuildName)
+                if (Services.CompassSettings.MarkGuildAsAlly && entity.Relation == RelationType.PK
+                                                            && entity.GuildName == Services.CompassSettings.MyGuildName)
                     entity.Relation = RelationType.GuildMember;
                 if (!founded)
                 {
@@ -112,7 +112,6 @@ namespace Capture.TeraModule.ViewModels
             Vector2 CompassPosition=new Vector2();
             Vector2 CompassSize = new Vector2(320, 320);
             
-            
             if (Services.CompassSettings.OverlayCorner != -1)
             {
                 CompassPosition = new Vector2(Services.CompassSettings.DISTANCE,Services.CompassSettings.DISTANCE);
@@ -123,10 +122,8 @@ namespace Capture.TeraModule.ViewModels
             ImGuiNative.igSetNextWindowContentSize(CompassSize);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
             ImGui.SetNextWindowBgAlpha(0);
-            
             if (ImGui.Begin("Overlay", ref Services.CompassSettings.OverlayOpened,(Services.CompassSettings.OverlayCorner != -1 ? ImGuiWindowFlags.NoMove : 0) | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoFocusOnAppearing| ImGuiWindowFlags.NoScrollbar))
             {
-                //var draw_list = ImGui.GetOverlayDrawList();
                 var draw_list = ImGui.GetWindowDrawList();
                 CompassPosition = ImGui.GetWindowPos();
                 ImGui.PopStyleVar();
@@ -140,7 +137,6 @@ namespace Capture.TeraModule.ViewModels
 
                     ImGuiNative.igEndPopup();
                 }
-
                 Vector2 WindowCenter = new Vector2(CompassPosition.X + CompassSize.X * 0.5f, CompassPosition.Y + CompassSize.Y * 0.5f);
                 
                 draw_list.AddCircleFilled(
@@ -158,12 +154,10 @@ namespace Capture.TeraModule.ViewModels
 
 
                 var dot2 = new Vector2(CompassPosition.X+CompassSize.X - 30, WindowCenter.Y);
-
                 var final = CameraScanner.CameraAddress != 0
                     ? RotatePoint(dot2, WindowCenter, new Angle(CameraScanner.Angle()).Gradus - 90)
                     : RotatePoint(dot2, WindowCenter,
                         PacketProcessor.Instance.EntityTracker.CompassUser.Heading.Gradus - 90);
-
                 draw_list.AddLine(WindowCenter, final, Color.FromArgb(120, 255, 255, 255).ToDx9ARGB(), 1f);
                 
                 var values = PlayerModels.Values.ToArray();
@@ -192,7 +186,6 @@ namespace Capture.TeraModule.ViewModels
                             Services.CompassSettings.RelationColors.TryGetValue(RelationType.Unknown, out color);
                     }
                     if(friendly&&Services.CompassSettings.CaptureOnlyEnemy) continue;
-
                     var ScreenPosition = GetScreenPos(values[i]);
 
                     color = color.ToDx9ARGB();
@@ -200,26 +193,31 @@ namespace Capture.TeraModule.ViewModels
                     draw_list.AddCircleFilled(
                         new Vector2(CompassPosition.X+ScreenPosition.X, CompassPosition.Y+ScreenPosition.Y),
                         Services.CompassSettings.PlayerSize, color, Services.CompassSettings.PlayerSize * 2);
-
                     if (Services.CompassSettings.ShowNicknames)
-                        draw_list.AddText(
-                            new Vector2(CompassPosition.X+ScreenPosition.X - values[i].Name.Length * 4 / 2f,
-                                CompassPosition.Y+ScreenPosition.Y + Services.CompassSettings.PlayerSize), color, $"{values[i].Name}");
-                    
+                    {
+                        
+                        Vector2 pos = new Vector2(CompassPosition.X + ScreenPosition.X - values[i].Name.Length * 4 / 2f,
+                            CompassPosition.Y + ScreenPosition.Y + Services.CompassSettings.PlayerSize);
+                       // Trace.WriteLine($"try render x:{pos.X} y:{pos.Y} {values[i].Name}\n");
+                        if(!float.IsNaN(pos.X))
+                            draw_list.AddText(pos
+                                , $"{values[i].Name}", color);
+                        //Trace.WriteLine($"rendered x:{pos.X} y:{pos.Y} {values[i].Name}\n");
+                    }
+
                 }
                 ImGuiNative.igSetCursorPosY(CompassSize.Y- ImGuiNative.igGetTextLineHeight());
                 //ImGui::BeginChild("item view", ImVec2(0, -)); // Leave room for 1 line below us
                 //ImGui.SetCursorScreenPos
-                
-                ImGui.TextColored(Color.Green.ToVector4(),$"{ally}");
+
+                ImGui.TextColored(Color.Green.ToVector4(), $"{ally}");
                 ImGui.SameLine();
-                ImGui.TextColored(Color.Red.ToVector4(),$"{enemy}");
+                ImGui.TextColored(Color.Red.ToVector4(), $"{enemy}");
                 ImGui.SameLine();
-                ImGui.TextColored(Color.Gray.ToVector4(),$"{deadally}|{deadenemy}");
+                ImGui.TextColored(Color.Gray.ToVector4(), $"{deadally}|{deadenemy}");
             }
 
             ImGui.End();
-            
             if (PacketProcessor.Instance.EntityTracker.CompassUser.Status==1&&DXHookD3D9._imageCache.TryGetValue("incombat.png", out var texture))
                 sprite.Draw(texture,new SharpDX.Mathematics.Interop.RawColorBGRA(255,255,255,255),null,null,
                     new SharpDX.Mathematics.Interop.RawVector3(CompassPosition.X+CompassSize.X-32, CompassPosition.Y+CompassSize.Y-64,0));
@@ -281,7 +279,6 @@ namespace Capture.TeraModule.ViewModels
                         ImGui.End();
                     }
                 }
-
             if (Services.CompassSettings.SettingsOpened)
             {
                 ImGui.SetNextWindowBgAlpha(0.3f);
@@ -376,7 +373,6 @@ namespace Capture.TeraModule.ViewModels
                     }
 
                 }
-
                 ImGui.End();
                 ImGui.PopStyleVar();
             }
