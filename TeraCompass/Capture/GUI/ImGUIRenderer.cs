@@ -126,16 +126,10 @@ namespace Capture.GUI
                     //        KeyDown[(char)wParam] = false;
                     //    break;
                     //case WindowsMessages.CHAR:
-                    //    if (true)
-                    //    {
-                    //        keyInput.Add((char)inputInfo.wParam);
-                    //        Trace.Write((char)inputInfo.wParam);
-                    //    }
-                            
-                    //    //Trace.Write($"hHook {hHook} {hookId} wParam {wParam} lParam {lParam} {inputInfo}");
+                    //    var io = ImGui.GetIO();
+                    //    io.AddInputCharacter((char)inputInfo.wParam);
                     //    break;
                 }
-                //Trace.Write($"hHook {hHook} {hookId} wParam {wParam} lParam {lParam} {inputInfo}");
             }
             return CallNextHookEx(hHook, hookId, wParam, lParam);
         }
@@ -215,9 +209,8 @@ namespace Capture.GUI
             ImGuiRenderDraw(data);
         }
 
-        private void UpdateImGuiInput(ImGuiIOPtr iso)
+        private void UpdateImGuiInput(ImGuiIOPtr io)
         {
-            var io = ImGui.GetIO();
             if (NativeMethods.IsWindowInForeground(_windowHandle))
             {
                 io.MousePos = new Vector2(mouseState.X / io.DisplayFramebufferScale.X,
@@ -233,18 +226,6 @@ namespace Capture.GUI
             io.MouseWheel = mouseState.Wheel;
             mouseState.Wheel = 0;
             
-            
-            //if (true)
-            //{
-            //    foreach (var i in KeyDown)
-            //    {
-            //        io.KeysDown[i.Key] = i.Value;
-            //    }
-            //    foreach (var i in keyInput)
-            //        io.AddInputCharacter(i);
-            //    keyInput.Clear();
-            //    KeyDown.Clear();
-            //}
         }
         private unsafe void ImGuiRenderDraw(ImDrawDataPtr drawData)
         {

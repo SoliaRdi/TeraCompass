@@ -158,6 +158,13 @@ namespace TeraCompass.Tera.Core.Game.Services
             OnEntitysCleared(CompassUser);
             Capture.TeraModule.Settings.Services.GameState = Capture.TeraModule.Settings.GameState.InLobby;
         }
+        public void Update(S_USER_LOCATION_IN_ACTION m)
+        {
+            var entity = GetOrNull(m.EntityId);
+            if (entity == null) return;
+            entity.Position = m.Position;
+            OnEntityUpdated(entity);
+        }
         /** Easy integrate style - compatible */
 
         public void Update(ParsedMessage message)
@@ -176,6 +183,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             message.On<S_DEAD_LOCATION>(Update);
             message.On<SUserStatus>(Update); 
             message.On<S_RETURN_TO_LOBBY>(Update); 
+            message.On<S_USER_LOCATION_IN_ACTION>(Update); 
         }
 
         private Entity LoginMe(LoginServerMessage m)

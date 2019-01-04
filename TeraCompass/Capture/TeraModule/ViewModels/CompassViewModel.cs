@@ -234,7 +234,7 @@ namespace Capture.TeraModule.ViewModels
                     {
                         ImGui.SetNextWindowPos(new Vector2(CompassPosition.X, CompassPosition.Y + CompassSize.Y), ImGuiCond.Always);
                         ImGui.SetNextWindowBgAlpha(0.3f);
-                        ImGui.SetNextWindowSize(new Vector2(350, 200));
+                        //ImGui.SetNextWindowSize(new Vector2(350, 200));
                         if (ImGui.Begin("Guilds", ref Services.CompassSettings.OverlayOpened,ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoFocusOnAppearing))
                         {
                             ImGui.BeginChild("left pane", new Vector2(150, 0), true);

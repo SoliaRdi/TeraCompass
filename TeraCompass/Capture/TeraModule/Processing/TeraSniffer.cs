@@ -6,12 +6,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using TeraCompass.NetworkSniffer;
 using TeraCompass.Tera.Core;
 using TeraCompass.Tera.Core.Game;
 using TeraCompass.Tera.Core.Sniffing;
-
+using EasyHook;
 namespace TeraCompass.Processing
 {
     public sealed class TeraSniffer : ITeraSniffer
@@ -25,18 +27,19 @@ namespace TeraCompass.Processing
         // Only take this lock in callbacks from tcp sniffing, not in code that can be called by the user.
         // Otherwise this could cause a deadlock if the user calls such a method from a callback that already holds a lock
         //private readonly object _eventLock = new object();
-        private readonly IpSniffer _ipSniffer;
+        private  IpSniffer _ipSniffer;
 
         private ConcurrentDictionary<TcpConnection, byte> _isNew { get; set; }
 
-        private readonly Dictionary<string, Server> _serversByIp;
+        private  Dictionary<string, Server> _serversByIp;
         private TcpConnection _clientToServer;
         private ConnectionDecrypter _decrypter;
         private MessageSplitter _messageSplitter;
         private TcpConnection _serverToClient;
         public int ClientProxyOverhead;
         private bool _connected;
-
+        Recv_Delegate  realRecvHook;
+        Send_Delegate realSendHook;
         public bool Connected
         {
             get => _connected;
@@ -53,7 +56,7 @@ namespace TeraCompass.Processing
 
         public int ServerProxyOverhead;
 
-        private TeraSniffer()
+        public void InitSniffer()
         {
             var servers = BasicTeraData.Instance.Servers;
             Packets = new ConcurrentQueue<Message>();
@@ -68,7 +71,7 @@ namespace TeraCompass.Processing
             try //fallback to raw sockets if no winpcap available
             {
                 _ipSniffer = new IpSnifferWinPcap(filter);
-                ((IpSnifferWinPcap) _ipSniffer).Warning += OnWarning;
+                ((IpSnifferWinPcap)_ipSniffer).Warning += OnWarning;
             }
             catch { _ipSniffer = new IpSnifferRawSocketMultipleInterfaces(); }
 
@@ -76,11 +79,66 @@ namespace TeraCompass.Processing
             var tcpSniffer = new TcpSniffer(_ipSniffer);
             tcpSniffer.NewConnection += HandleNewConnection;
             tcpSniffer.EndConnection += HandleEndConnection;
-            
         }
 
+        public void InitRawMessages()
+        {
+            var sendHookAddr = LocalHook.GetProcAddress("ws2_32.dll", "send");
+            var sendHook = LocalHook.Create(sendHookAddr,new Send_Delegate(send_Hook), this);
+            realSendHook =(Send_Delegate) Marshal.GetDelegateForFunctionPointer(sendHookAddr, typeof(Send_Delegate));
+            var recvhookAddr = LocalHook.GetProcAddress("ws2_32.dll", "recv");
+            var recvHook = LocalHook.Create(recvhookAddr, new Recv_Delegate(recv_Hook), this);
+            realRecvHook = (Recv_Delegate)Marshal.GetDelegateForFunctionPointer(sendHookAddr, typeof(Recv_Delegate));
+            sendHook.ThreadACL.SetExclusiveACL(new int[0]);
+            recvHook.ThreadACL.SetExclusiveACL(new int[0]);
+            _decrypter = new ConnectionDecrypter();
+            _decrypter.ClientToServerDecrypted += HandleClientToServerDecrypted;
+            _decrypter.ServerToClientDecrypted += HandleServerToClientDecrypted;
+            
+            _messageSplitter = new MessageSplitter();
+            _messageSplitter.MessageReceived += HandleMessageReceived;
+            _messageSplitter.Resync += OnResync;
 
-       
+        }
+        #region Send hook
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+        delegate int Send_Delegate(IntPtr Socket, IntPtr buff, int len, int flags);
+
+
+        int send_Hook(IntPtr socket, IntPtr buffer, int length, int flags)
+        {
+            int bytesCount = realSendHook(socket, buffer, length, flags);
+            if (bytesCount > 0)
+            {
+                byte[] RecvBuffer = new byte[bytesCount];
+                Marshal.Copy(buffer, RecvBuffer, 0, RecvBuffer.Length);
+                Trace.Write(bytesCount);
+            }
+            return bytesCount;
+        }
+
+        #endregion
+
+        #region Recv hook
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+        delegate int Recv_Delegate(IntPtr Socket, IntPtr buff, int len, int flags);
+
+
+
+        int recv_Hook(IntPtr socket, IntPtr buffer, int length, int flags)
+        {
+            int bytesCount = realSendHook(socket, buffer, length, flags);
+            if (bytesCount > 0)
+            {
+                byte[] RecvBuffer = new byte[bytesCount];
+                Marshal.Copy(buffer, RecvBuffer, 0, RecvBuffer.Length);
+                Trace.Write(bytesCount);
+            }
+            return bytesCount;
+        }
+
+        #endregion
+
 
         // IpSniffer has its own locking, so we need no lock here.
         public bool Enabled

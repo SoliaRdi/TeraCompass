@@ -43,7 +43,7 @@ namespace TeraCompass.Tera.Core.Sniffing
             session.ClientKey2 = clientKey2;
             session.ServerKey1 = serverKey1;
             session.ServerKey2 = serverKey2;
-            session.Init(_region);
+            session.Init();
             return session;
         }
 

@@ -58,6 +58,7 @@ namespace Capture
             // When not using GAC there can be issues with remoting assemblies resolving correctly
             // this is a workaround that ensures that the current assembly is correctly associated
             AppDomain currentDomain = AppDomain.CurrentDomain;
+            _interface.Message(MessageType.Information, "End inject");
             currentDomain.AssemblyResolve += (sender, args) =>
             {
                 return this.GetType().Assembly.FullName == args.Name ? this.GetType().Assembly : null;
@@ -71,8 +72,18 @@ namespace Capture
             try
             {
                 BasicTeraData.Instance = new BasicTeraData(config.TargetFolder);
-                TeraSniffer.Instance.Enabled = true;
-                PacketProcessor.Instance.Connected += s => { _interface.Message(MessageType.Information, "Connected."); };
+                if (config.RawMessage)
+                {
+                    TeraSniffer.Instance.InitRawMessages();
+                    _interface.Message(MessageType.Information, "Raw messages.");
+                }
+                else
+                {
+                    TeraSniffer.Instance.InitSniffer();
+                    TeraSniffer.Instance.Enabled = true;
+                    PacketProcessor.Instance.Connected += s => { _interface.Message(MessageType.Information, "Connected."); };
+                }
+
                 // Initialise the Hook
                 if (!InitialiseDirectXHook(config))
                 {

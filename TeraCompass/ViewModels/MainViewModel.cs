@@ -70,7 +70,7 @@ namespace TeraCompass.ViewModels
 
         private string _logData;
         private CaptureProcess _captureProcess;
-        private bool _waitSplash =true;
+        private bool _waitSplash;
 
         #region public members
         public string LogData
@@ -93,7 +93,6 @@ namespace TeraCompass.ViewModels
             {
                 Process.WaitForInputIdle();
                 var className = GetClassNameOfWindow(Process.MainWindowHandle);
-                if (WaitSplash)
                     while (!className.Contains("Launch"))
                     {
                         Process.Refresh();
@@ -115,11 +114,11 @@ namespace TeraCompass.ViewModels
                 }
                 
                 Thread.Sleep(100);
+
                 while (IsHungAppWindow(Process.MainWindowHandle))
                 {
                     Thread.Sleep(100);
                 }
-
 
 
                 Direct3DVersion direct3DVersion = Direct3DVersion.Direct3D9;
@@ -127,49 +126,58 @@ namespace TeraCompass.ViewModels
                 CaptureConfig cc = new CaptureConfig()
                 {
                     Direct3DVersion = direct3DVersion,
-                    ShowOverlay = false,
-                    TargetFramesPerSecond = 6
+                    RawMessage = WaitSplash,
+                    TargetFramesPerSecond = 5
                 };
-
+                LogEvent("Begin inject");
                 var captureInterface = new CaptureInterface();
                 captureInterface.RemoteMessage += e => { LogEvent(e.Message);};
                 //captureInterface.Disconnected += CaptureInterface_Disconnected;
-                _captureProcess = new CaptureProcess(Process, cc, captureInterface);
-
-                Process.EnableRaisingEvents = true;
-                Process.Exited += Process_Exited;
+                try
+                {
+                    _captureProcess = new CaptureProcess(Process, cc, captureInterface);
+                }
+                catch (Exception ex)
+                {
+                    LogEvent(ex.Message);
+                    if (ex.InnerException != null) LogEvent(ex.InnerException.Message);
+                    if (ex.InnerException != null) LogEvent(ex.InnerException.StackTrace);
+                    LogEvent(ex.StackTrace);
+                }
+                
+                WaitAppExit();
             }
             else
             {
                 LogEvent("error...");
             }
-            Thread.Sleep(10);
-            
         }
 
-        private void CaptureInterface_Disconnected()
-        {
-            LogEvent("Client down");
-            Thread.Sleep(1000);
-            
-            InitializeProgram();
-        }
-
-        private void Process_Exited(object sender, EventArgs e)
-        {
-            
-            LogEvent("Client down");
-            InitializeProgram();
-        }
 
         public MainViewModel(IEventAggregator eventAggregator)
         {
             eventAggregator.Subscribe(this);
         }
 
-        public void UnloadProgram()
+        public void WaitAppExit()
         {
-           
+            Task.Factory.StartNew(() =>
+            {
+
+                var query = new WqlEventQuery(
+                    "__InstanceDeletionEvent",
+                    new TimeSpan(0, 0, 5),
+                    "TargetInstance isa \"Win32_Process\" and TargetInstance.Name = 'TERA.EXE'"
+                );
+
+                using (var watcher = new ManagementEventWatcher(query))
+                {
+                    watcher.WaitForNextEvent();
+                    LogEvent("Client down");
+                    InitializeProgram();
+                    watcher.Stop();
+                }
+            });
         }
         public void LogEvent(string text)
         {
@@ -183,8 +191,6 @@ namespace TeraCompass.ViewModels
 
         public void InitializeProgram()
         {
-            if (Process.GetProcessesByName("TERA").Length==0)
-            {
                 Task.Factory.StartNew(() =>
                 {
 
@@ -197,18 +203,13 @@ namespace TeraCompass.ViewModels
                     using (var watcher = new ManagementEventWatcher(query))
                     {
                         LogEvent("Waiting game...");
-                        ManagementBaseObject e = watcher.WaitForNextEvent();
+                        watcher.WaitForNextEvent();
                         LogEvent("Game launched...");
 
                         watcher.Stop();
                         Task.Factory.StartNew(AttachProcess);
                     }
                 });
-            }
-            else
-            {
-                Task.Factory.StartNew(AttachProcess);
-            }
         }
         public void PcapWarning(string str)
         {

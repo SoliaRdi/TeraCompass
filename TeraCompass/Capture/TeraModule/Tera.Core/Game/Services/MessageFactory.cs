@@ -35,6 +35,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             {"S_CREATURE_LIFE", Helpers.Contructor<Func<TeraMessageReader,SCreatureLife>>()},
             { "S_USER_STATUS", Helpers.Contructor<Func<TeraMessageReader,SUserStatus>>()},
             { "S_RETURN_TO_LOBBY", Helpers.Contructor<Func<TeraMessageReader,S_RETURN_TO_LOBBY>>()},
+            { "S_USER_LOCATION_IN_ACTION", Helpers.Contructor<Func<TeraMessageReader,S_USER_LOCATION_IN_ACTION>>()},
         };
 
 

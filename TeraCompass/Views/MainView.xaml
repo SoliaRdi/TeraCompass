@@ -18,7 +18,7 @@
                     <RowDefinition Height="0.05*"/>
                     <RowDefinition  Height="0.95*"/>
                 </Grid.RowDefinitions>
-                <CheckBox IsChecked="{Binding WaitSplash}" Grid.Row="0">Wait splash screen</CheckBox>
+                <CheckBox IsChecked="{Binding WaitSplash}" Grid.Row="0">Raw messages</CheckBox>
                 <TextBox x:Name="LogData" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" IsReadOnly="True" Grid.Column="0" TextWrapping="Wrap" TextChanged="TextBox_TextChanged"></TextBox>
 
             </Grid>

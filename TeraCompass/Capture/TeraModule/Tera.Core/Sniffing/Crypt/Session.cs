@@ -27,45 +27,17 @@ namespace TeraCompass.Tera.Core.Sniffing.Crypt
 
         public static Session Instance => _instance ?? (_instance = new Session());
 
-        public void Init(string region)
+        public void Init()
         {
-            //if (region == "KR" || region == "JP" || region == "RU" || region == "EU" || region == "NA")
-            //{
-                TmpKey1 = Utils.ShiftKey(ServerKey1, 67);
-            //}
-            //else
-            //{
-            //    TmpKey1 = Utils.ShiftKey(ServerKey1, 31);
-            //}
-
+            TmpKey1 = Utils.ShiftKey(ServerKey1, 67);
             TmpKey2 = Utils.XorKey(TmpKey1, ClientKey1);
-
-            //if (region == "KR" || region == "JP" || region == "RU" || region == "EU" || region == "NA")
-            //{
-                TmpKey1 = Utils.ShiftKey(ClientKey2, 29, false);
-            //}
-            //else
-            //{
-            //    TmpKey1 = Utils.ShiftKey(ClientKey2, 17, false);
-            //}
-
+            TmpKey1 = Utils.ShiftKey(ClientKey2, 29, false);
             DecryptKey = Utils.XorKey(TmpKey1, TmpKey2);
-
             Decryptor = new Cryptor(DecryptKey);
-
-            //if(region == "KR" || region == "JP" || region == "RU" || region == "EU" || region == "NA")
-            //{
-                TmpKey1 = Utils.ShiftKey(ServerKey2, 41);
-            //}
-            //else
-            //{
-            //    TmpKey1 = Utils.ShiftKey(ServerKey2, 79);
-            //}
-
+            TmpKey1 = Utils.ShiftKey(ServerKey2, 41);
             Decryptor.ApplyCryptor(TmpKey1, 128);
             EncryptKey = new byte[128];
             Buffer.BlockCopy(TmpKey1, 0, EncryptKey, 0, 128);
-
             Encryptor = new Cryptor(EncryptKey);
         }
 

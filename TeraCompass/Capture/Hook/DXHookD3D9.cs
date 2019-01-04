@@ -286,6 +286,7 @@ namespace Capture.Hook
                         {
                             var draw_list = ImGui.GetOverlayDrawList();
                             draw_list.AddText(new Vector2(10, 100),  $"RenderingTime(ms) = {Elapsed.Milliseconds}",Color.Red.ToDx9ARGB());
+                            draw_list.AddText(new Vector2(10, 50),  DateTime.Now.ToString("HH: mm:ss.fff"), Color.White.ToDx9ARGB());
                         }
                         if (Services.CompassSettings.ShowFPS)
                         {
@@ -323,7 +324,7 @@ namespace Capture.Hook
                GetImageForImageElement(image,device);
             }
         }
-      unsafe void GetImageForImageElement(ImageElement element, Device device)
+        void GetImageForImageElement(ImageElement element, Device device)
         {
             if (!string.IsNullOrEmpty(element.Filename))
             {
