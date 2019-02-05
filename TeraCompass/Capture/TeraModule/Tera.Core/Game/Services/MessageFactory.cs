@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Capture.TeraModule.Processing.Packets;
+using Capture.TeraModule.Tera.Core.Game.Messages.Server;
 using TeraCompass.Processing.Packets;
 using TeraCompass.Tera.Core.Game.Messages;
 using TeraCompass.Tera.Core.Game.Messages.Client;
@@ -36,6 +37,10 @@ namespace TeraCompass.Tera.Core.Game.Services
             { "S_USER_STATUS", Helpers.Contructor<Func<TeraMessageReader,SUserStatus>>()},
             { "S_RETURN_TO_LOBBY", Helpers.Contructor<Func<TeraMessageReader,S_RETURN_TO_LOBBY>>()},
             { "S_USER_LOCATION_IN_ACTION", Helpers.Contructor<Func<TeraMessageReader,S_USER_LOCATION_IN_ACTION>>()},
+            { "S_USER_FLYING_LOCATION", Helpers.Contructor<Func<TeraMessageReader,S_USER_FLYING_LOCATION>>()},
+            { "S_SPAWN_COLLECTION", Helpers.Contructor<Func<TeraMessageReader,S_SPAWN_COLLECTION>>()},
+            { "S_DESPAWN_COLLECTION", Helpers.Contructor<Func<TeraMessageReader,S_DESPAWN_COLLECTION>>()},
+            { "S_USER_DEATH", Helpers.Contructor<Func<TeraMessageReader,S_USER_DEATH>>()},
         };
 
 

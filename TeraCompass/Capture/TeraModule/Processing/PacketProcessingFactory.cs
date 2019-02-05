@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Capture.TeraModule.Processing.Packets;
+using Capture.TeraModule.Tera.Core.Game.Messages.Server;
 using TeraCompass.Processing.Packets;
 using TeraCompass.Tera.Core.Game.Messages;
 using TeraCompass.Tera.Core.Game.Messages.Server;
@@ -19,8 +20,6 @@ namespace Capture.TeraModule.Processing
         private static readonly Dictionary<Type, Delegate> MainProcessor = new Dictionary<Type, Delegate>()
         {
             {typeof(C_LOGIN_ARBITER), Helpers.Contructor<Func<C_LOGIN_ARBITER, Capture.TeraModule.Processing.Packets.C_LOGIN_ARBITER>>()},
-            {typeof(S_GET_USER_LIST), new Action<S_GET_USER_LIST>(x => PacketProcessor.Instance.UserLogoTracker.SetUserList(x))},
-            {typeof(S_GET_USER_GUILD_LOGO), new Action<S_GET_USER_GUILD_LOGO>(x => PacketProcessor.Instance.UserLogoTracker.AddLogo(x))},
             {typeof(LoginServerMessage), Helpers.Contructor<Func<LoginServerMessage, S_LOGIN>>()},
             { typeof(C_PLAYER_LOCATION), new Action<C_PLAYER_LOCATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             { typeof(C_PLAYER_FLYING_LOCATION), new Action<C_PLAYER_FLYING_LOCATION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
@@ -35,6 +34,9 @@ namespace Capture.TeraModule.Processing
             { typeof(SUserStatus), new Action<SUserStatus>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             { typeof(S_RETURN_TO_LOBBY), new Action<S_RETURN_TO_LOBBY>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
             { typeof(S_USER_LOCATION_IN_ACTION), new Action<S_USER_LOCATION_IN_ACTION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+            { typeof(S_SPAWN_COLLECTION), new Action<S_SPAWN_COLLECTION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+            { typeof(S_DESPAWN_COLLECTION), new Action<S_DESPAWN_COLLECTION>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
+            { typeof(S_LOAD_TOPO), new Action<S_LOAD_TOPO>(x => PacketProcessor.Instance.EntityTracker.Update(x))},
         };
 
         public bool Process(ParsedMessage message)

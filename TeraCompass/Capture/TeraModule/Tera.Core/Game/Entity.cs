@@ -10,15 +10,10 @@ namespace TeraCompass.Tera.Core.Game
             Id = id;
         }
 
-        protected Entity(EntityId id, Vector3f position, Angle heading, Vector3f? finish = null, int speed = 0,
-            long time = 0)
+        protected Entity(EntityId id, Vector3f position)
         {
             Id = id;
             Position = position;
-            Heading = heading;
-            Finish = finish ?? Position;
-            Speed = speed;
-            StartTime = time;
         }
 
         public EntityId Id { get; }
@@ -40,16 +35,10 @@ namespace TeraCompass.Tera.Core.Game
 
 
         public Vector3f Position { get; set; }
-        public Angle Heading { get; set; }
-        public Vector3f Finish { get; set; }
-        public Angle EndAngle { get; set; }
-        public Angle LastCastAngle { get; set; }
-        public int Speed { get; set; }
-        public long StartTime { get; set; }
-        public long EndTime { get; set; }
         public RelationType Relation { get; set; }
         public bool Dead { get; set; }
         public int Status { get; set; }
+        public int ZoneId { get; set; }
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;

@@ -38,8 +38,6 @@ namespace TeraCompass.Processing
         private TcpConnection _serverToClient;
         public int ClientProxyOverhead;
         private bool _connected;
-        Recv_Delegate  realRecvHook;
-        Send_Delegate realSendHook;
         public bool Connected
         {
             get => _connected;
@@ -80,64 +78,6 @@ namespace TeraCompass.Processing
             tcpSniffer.NewConnection += HandleNewConnection;
             tcpSniffer.EndConnection += HandleEndConnection;
         }
-
-        public void InitRawMessages()
-        {
-            var sendHookAddr = LocalHook.GetProcAddress("ws2_32.dll", "send");
-            var sendHook = LocalHook.Create(sendHookAddr,new Send_Delegate(send_Hook), this);
-            realSendHook =(Send_Delegate) Marshal.GetDelegateForFunctionPointer(sendHookAddr, typeof(Send_Delegate));
-            var recvhookAddr = LocalHook.GetProcAddress("ws2_32.dll", "recv");
-            var recvHook = LocalHook.Create(recvhookAddr, new Recv_Delegate(recv_Hook), this);
-            realRecvHook = (Recv_Delegate)Marshal.GetDelegateForFunctionPointer(sendHookAddr, typeof(Recv_Delegate));
-            sendHook.ThreadACL.SetExclusiveACL(new int[0]);
-            recvHook.ThreadACL.SetExclusiveACL(new int[0]);
-            _decrypter = new ConnectionDecrypter();
-            _decrypter.ClientToServerDecrypted += HandleClientToServerDecrypted;
-            _decrypter.ServerToClientDecrypted += HandleServerToClientDecrypted;
-            
-            _messageSplitter = new MessageSplitter();
-            _messageSplitter.MessageReceived += HandleMessageReceived;
-            _messageSplitter.Resync += OnResync;
-
-        }
-        #region Send hook
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        delegate int Send_Delegate(IntPtr Socket, IntPtr buff, int len, int flags);
-
-
-        int send_Hook(IntPtr socket, IntPtr buffer, int length, int flags)
-        {
-            int bytesCount = realSendHook(socket, buffer, length, flags);
-            if (bytesCount > 0)
-            {
-                byte[] RecvBuffer = new byte[bytesCount];
-                Marshal.Copy(buffer, RecvBuffer, 0, RecvBuffer.Length);
-                Trace.Write(bytesCount);
-            }
-            return bytesCount;
-        }
-
-        #endregion
-
-        #region Recv hook
-        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
-        delegate int Recv_Delegate(IntPtr Socket, IntPtr buff, int len, int flags);
-
-
-
-        int recv_Hook(IntPtr socket, IntPtr buffer, int length, int flags)
-        {
-            int bytesCount = realSendHook(socket, buffer, length, flags);
-            if (bytesCount > 0)
-            {
-                byte[] RecvBuffer = new byte[bytesCount];
-                Marshal.Copy(buffer, RecvBuffer, 0, RecvBuffer.Length);
-                Trace.Write(bytesCount);
-            }
-            return bytesCount;
-        }
-
-        #endregion
 
 
         // IpSniffer has its own locking, so we need no lock here.

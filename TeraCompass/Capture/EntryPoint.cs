@@ -30,12 +30,12 @@ namespace Capture
             // Get reference to IPC to host application
             // Note: any methods called or events triggered against _interface will execute in the host process.
             _interface = EasyHook.RemoteHooking.IpcConnectClient<CaptureInterface>(channelName);
-            
+
             // We try to ping immediately, if it fails then injection fails
             _interface.Ping();
 
             #region Allow client event handlers (bi-directional IPC)
-            
+
             // Attempt to create a IpcServerChannel so that any event handlers on the client will function correctly
             System.Collections.IDictionary properties = new System.Collections.Hashtable();
             properties["name"] = channelName;
@@ -46,7 +46,7 @@ namespace Capture
 
             System.Runtime.Remoting.Channels.Ipc.IpcServerChannel _clientServerChannel = new System.Runtime.Remoting.Channels.Ipc.IpcServerChannel(properties, binaryProv);
             System.Runtime.Remoting.Channels.ChannelServices.RegisterChannel(_clientServerChannel, false);
-            
+
             #endregion
         }
 
@@ -59,36 +59,28 @@ namespace Capture
             // this is a workaround that ensures that the current assembly is correctly associated
             AppDomain currentDomain = AppDomain.CurrentDomain;
             _interface.Message(MessageType.Information, "End inject");
-            currentDomain.AssemblyResolve += (sender, args) =>
-            {
-                return this.GetType().Assembly.FullName == args.Name ? this.GetType().Assembly : null;
-            };
+            currentDomain.AssemblyResolve += (sender, args) => { return this.GetType().Assembly.FullName == args.Name ? this.GetType().Assembly : null; };
 
             // NOTE: This is running in the target process
             _interface.Message(MessageType.Information, "Injected into process Id:{0}.", EasyHook.RemoteHooking.GetCurrentProcessId());
-            
+
             _runWait = new System.Threading.ManualResetEvent(false);
             _runWait.Reset();
             try
             {
                 BasicTeraData.Instance = new BasicTeraData(config.TargetFolder);
-                if (config.RawMessage)
-                {
-                    TeraSniffer.Instance.InitRawMessages();
-                    _interface.Message(MessageType.Information, "Raw messages.");
-                }
-                else
-                {
-                    TeraSniffer.Instance.InitSniffer();
-                    TeraSniffer.Instance.Enabled = true;
-                    PacketProcessor.Instance.Connected += s => { _interface.Message(MessageType.Information, "Connected."); };
-                }
+
+                TeraSniffer.Instance.InitSniffer();
+                TeraSniffer.Instance.Enabled = true;
+                PacketProcessor.Instance.Connected += s => { _interface.Message(MessageType.Information, "Connected."); };
+
 
                 // Initialise the Hook
                 if (!InitialiseDirectXHook(config))
                 {
                     return;
                 }
+
                 _interface.Disconnected += _clientEventProxy.DisconnectedProxyHandler;
 
                 // Important Note:
@@ -145,7 +137,9 @@ namespace Capture
                 {
                     _interface.Message(MessageType.Debug, "Disposing of hooks...");
                 }
-                catch (System.Runtime.Remoting.RemotingException) { } // Ignore channel remoting errors
+                catch (System.Runtime.Remoting.RemotingException)
+                {
+                } // Ignore channel remoting errors
 
                 // Dispose of the hooks so they are removed
                 foreach (var dxHook in _directXHooks)
@@ -203,24 +197,28 @@ namespace Capture
                         version = Direct3DVersion.Direct3D11_1;
                         loadedVersions.Add(version);
                     }
+
                     if (d3D11Loaded != IntPtr.Zero)
                     {
                         _interface.Message(MessageType.Debug, "Autodetect found Direct3D 11");
                         version = Direct3DVersion.Direct3D11;
                         loadedVersions.Add(version);
                     }
+
                     if (d3D10_1Loaded != IntPtr.Zero)
                     {
                         _interface.Message(MessageType.Debug, "Autodetect found Direct3D 10.1");
                         version = Direct3DVersion.Direct3D10_1;
                         loadedVersions.Add(version);
                     }
+
                     if (d3D10Loaded != IntPtr.Zero)
                     {
                         _interface.Message(MessageType.Debug, "Autodetect found Direct3D 10");
                         version = Direct3DVersion.Direct3D10;
                         loadedVersions.Add(version);
                     }
+
                     if (d3D9Loaded != IntPtr.Zero)
                     {
                         _interface.Message(MessageType.Debug, "Autodetect found Direct3D 9");
@@ -257,7 +255,6 @@ namespace Capture
                 }
 
                 return true;
-
             }
             catch (Exception e)
             {
@@ -271,7 +268,7 @@ namespace Capture
 
         Task _checkAlive;
         long _stopCheckAlive = 0;
-        
+
         /// <summary>
         /// Begin a background thread to check periodically that the host process is still accessible on its IPC channel
         /// </summary>

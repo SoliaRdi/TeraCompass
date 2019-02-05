@@ -5,6 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Capture.TeraModule.Processing.Packets;
+using Capture.TeraModule.Tera.Core.Game;
+using Capture.TeraModule.Tera.Core.Game.Messages.Server;
 using TeraCompass.Processing.Packets;
 using TeraCompass.Tera.Core.Game.Messages;
 using TeraCompass.Tera.Core.Game.Messages.Client;
@@ -38,7 +40,7 @@ namespace TeraCompass.Tera.Core.Game.Services
             EntityUpdated?.Invoke(entity);
         }
 
-        private void OnEntityDeleted(Entity entity)
+        private void OnEntityDeleted(IEntity entity)
         {
             EntityDeleted?.Invoke(entity);
         }
@@ -123,7 +125,7 @@ namespace TeraCompass.Tera.Core.Game.Services
         {
             var entity = GetOrNull(m.Entity);
             if (entity == null) return;
-            entity.Position = m.Finish;
+            entity.Position = m.Start;
             OnEntityUpdated(entity);
         }
         public void Update(S_CHANGE_RELATION m)
@@ -165,11 +167,47 @@ namespace TeraCompass.Tera.Core.Game.Services
             entity.Position = m.Position;
             OnEntityUpdated(entity);
         }
+        public void Update(S_USER_FLYING_LOCATION m)
+        {
+            var entity = GetOrNull(m.EntityId);
+            if (entity == null) return;
+            entity.Position = m.Position;
+            OnEntityUpdated(entity);
+        }
+        public void Update(S_SPAWN_COLLECTION m)
+        {
+            var newEntity = new CollectionEntity();
+            newEntity.Position = m.Position;
+            newEntity.CollectionId = m.CollectionId;
+            newEntity.Amount = m.Amount;
+            newEntity.Angle = m.Angle;
+            newEntity.Extractor = m.Extractor;
+            newEntity.ExtractorDisabled = m.ExtractorDisabled;
+            newEntity.Id = m.EntityId;
+            if (newEntity.ColorType != ColorType.Grey)
+            {
+                newEntity.ZoneId = CompassUser.ZoneId;
+                Register(newEntity);
+            }
+        }
+        public void Update(S_DESPAWN_COLLECTION m)
+        {
+            var entity = (CollectionEntity)GetOrNull(m.EntityId);
+            if (entity != null)
+            {
+                OnEntityDeleted(entity);
+                _entities.Remove(m.EntityId);
+            }
+        }
+        public void Update(S_LOAD_TOPO m)
+        {
+            if (CompassUser == null) return;
+            CompassUser.ZoneId = m.AreaId;
+        }
         /** Easy integrate style - compatible */
 
         public void Update(ParsedMessage message)
         {
-            
             message.On<SpawnUserServerMessage>(Update);
             message.On<LoginServerMessage>(Update);
             message.On<C_PLAYER_LOCATION>(Update);
@@ -184,6 +222,10 @@ namespace TeraCompass.Tera.Core.Game.Services
             message.On<SUserStatus>(Update); 
             message.On<S_RETURN_TO_LOBBY>(Update); 
             message.On<S_USER_LOCATION_IN_ACTION>(Update); 
+            message.On<S_USER_FLYING_LOCATION>(Update);
+            message.On<S_SPAWN_COLLECTION>(Update);
+            message.On<S_DESPAWN_COLLECTION>(Update);
+            message.On<S_LOAD_TOPO>(Update);
         }
 
         private Entity LoginMe(LoginServerMessage m)

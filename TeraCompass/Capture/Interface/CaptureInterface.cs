@@ -9,10 +9,6 @@ using System.Threading;
 namespace Capture.Interface
 {
     [Serializable]
-    public delegate void RecordingStartedEvent(CaptureConfig config);
-    [Serializable]
-    public delegate void RecordingStoppedEvent();
-    [Serializable]
     public delegate void MessageReceivedEvent(MessageReceivedEventArgs message);
 
     [Serializable]
@@ -27,31 +23,13 @@ namespace Capture.Interface
         /// The client process Id
         /// </summary>
         public int ProcessId { get; set; }
-
-        #region Events
-
-        #region Server-side Events
         
         /// <summary>
         /// Server event for sending debug and error information from the client to server
         /// </summary>
         public event MessageReceivedEvent RemoteMessage;
         
-
-        
-        #endregion
-
-        #region Client-side Events
-        
-        /// <summary>
-        /// Client event used to communicate to the client that it is time to start recording
-        /// </summary>
-        public event RecordingStartedEvent RecordingStarted;
-
-        /// <summary>
-        /// Client event used to communicate to the client that it is time to stop recording
-        /// </summary>
-        public event RecordingStoppedEvent RecordingStopped;
+       
 
 
 
@@ -59,54 +37,6 @@ namespace Capture.Interface
         /// Client event used to notify the hook to exit
         /// </summary>
         public event DisconnectedEvent Disconnected;
-
-
-        #endregion
-
-        #endregion
-
-        public bool IsRecording { get; set; }
-
-        #region Public Methods
-
-        #region Video Capture
-
-        /// <summary>
-        /// If not <see cref="IsRecording"/> will invoke the <see cref="RecordingStarted"/> event, starting a new recording. 
-        /// </summary>
-        /// <param name="config">The configuration for the recording</param>
-        /// <remarks>Handlers in the server and remote process will be be invoked.</remarks>
-        public void StartRecording(CaptureConfig config)
-        {
-            if (IsRecording)
-                return;
-            SafeInvokeRecordingStarted(config);
-            IsRecording = true;
-        }
-
-        /// <summary>
-        /// If <see cref="IsRecording"/>, will invoke the <see cref="RecordingStopped"/> event, finalising any existing recording.
-        /// </summary>
-        /// <remarks>Handlers in the server and remote process will be be invoked.</remarks>
-        public void StopRecording()
-        {
-            if (!IsRecording)
-                return;
-            SafeInvokeRecordingStopped();
-            IsRecording = false;
-        }
-
-        #endregion
-
-        #region Still image Capture
-
-
-
-
-
-
-
-        #endregion
 
         /// <summary>
         /// Tell the client process to disconnect
@@ -133,62 +63,6 @@ namespace Capture.Interface
         }
 
 
-
-
-
-
-
-        #endregion
-
-        #region Private: Invoke message handlers
-
-        private void SafeInvokeRecordingStarted(CaptureConfig config)
-        {
-            if (RecordingStarted == null)
-                return;         //No Listeners
-
-            RecordingStartedEvent listener = null;
-            Delegate[] dels = RecordingStarted.GetInvocationList();
-
-            foreach (Delegate del in dels)
-            {
-                try
-                {
-                    listener = (RecordingStartedEvent)del;
-                    listener.Invoke(config);
-                }
-                catch (Exception)
-                {
-                    //Could not reach the destination, so remove it
-                    //from the list
-                    RecordingStarted -= listener;
-                }
-            }
-        }
-
-        private void SafeInvokeRecordingStopped()
-        {
-            if (RecordingStopped == null)
-                return;         //No Listeners
-
-            RecordingStoppedEvent listener = null;
-            Delegate[] dels = RecordingStopped.GetInvocationList();
-
-            foreach (Delegate del in dels)
-            {
-                try
-                {
-                    listener = (RecordingStoppedEvent)del;
-                    listener.Invoke();
-                }
-                catch (Exception)
-                {
-                    //Could not reach the destination, so remove it
-                    //from the list
-                    RecordingStopped -= listener;
-                }
-            }
-        }
 
         private void SafeInvokeMessageRecevied(MessageReceivedEventArgs eventArgs)
         {
@@ -239,7 +113,6 @@ namespace Capture.Interface
             }
         }
 
-        #endregion
 
         /// <summary>
         /// Used to confirm connection to IPC server channel
@@ -256,17 +129,6 @@ namespace Capture.Interface
     /// </summary>
     public class ClientCaptureInterfaceEventProxy : MarshalByRefObject
     {
-        #region Event Declarations
-
-        /// <summary>
-        /// Client event used to communicate to the client that it is time to start recording
-        /// </summary>
-        public event RecordingStartedEvent RecordingStarted;
-
-        /// <summary>
-        /// Client event used to communicate to the client that it is time to stop recording
-        /// </summary>
-        public event RecordingStoppedEvent RecordingStopped;
 
 
 
@@ -278,13 +140,6 @@ namespace Capture.Interface
         /// <summary>
         /// Client event used to display in-game text
         /// </summary>
- 
-
-
-
-        #endregion
-
-        #region Lifetime Services
 
         public override object InitializeLifetimeService()
         {
@@ -293,26 +148,11 @@ namespace Capture.Interface
             return null;
         }
 
-        #endregion
-
-        public void RecordingStartedProxyHandler(CaptureConfig config)
-        {
-            if (RecordingStarted != null)
-                RecordingStarted(config);
-        }
-
-        public void RecordingStoppedProxyHandler()
-        {
-            if (RecordingStopped != null)
-                RecordingStopped();
-        }
-
-
         public void DisconnectedProxyHandler()
         {
             if (Disconnected != null)
                 Disconnected();
         }
-       
+
     }
 }

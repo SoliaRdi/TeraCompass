@@ -29,7 +29,6 @@ namespace Capture.TeraModule.Processing
 
         internal PacketProcessingFactory PacketProcessing = new PacketProcessingFactory();
         public Server Server;
-        internal UserLogoTracker UserLogoTracker = new UserLogoTracker();
         readonly Type UnknownType = typeof(UnknownMessage);
         private PacketProcessor()
         {

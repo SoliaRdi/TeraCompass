@@ -8,11 +8,17 @@ namespace TeraCompass.Tera.Core.Game
         public float Y;
         public float Z;
 
+        public Vector3f(float x, float y, float z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
         public override string ToString()
         {
             return $"({X},{Y},{Z})";
         }
-
         public float DistanceTo(Vector3f target)
         {
             double a = target.X - X;

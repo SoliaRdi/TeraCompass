@@ -112,10 +112,14 @@
     <Compile Include="TeraModule\CameraFinder\MemoryScanner.cs" />
     <Compile Include="TeraModule\Hook\SigScan.cs" />
     <Compile Include="TeraModule\Processing\Packets\S_DEAD_LOCATION.cs" />
+    <Compile Include="TeraModule\Processing\Packets\S_USER_DEATH.cs" />
     <Compile Include="TeraModule\Processing\Packets\S_USER_LOCATION_IN_ACTION.cs" />
     <Compile Include="TeraModule\Settings\Services.cs" />
+    <Compile Include="TeraModule\Tera.Core\Game\CollectionEntity.cs" />
+    <Compile Include="TeraModule\Tera.Core\Game\Messages\Server\S_DESPAWN_COLLECTION.cs" />
+    <Compile Include="TeraModule\Tera.Core\Game\Messages\Server\S_SPAWN_COLLECTION.cs" />
+    <Compile Include="TeraModule\Tera.Core\Game\Services\CollectionDatabase.cs" />
     <Compile Include="TeraModule\ViewModels\CompassViewModel.cs" />
-    <Compile Include="TeraModule\GameModels\PlayerModel.cs" />
     <Compile Include="TeraModule\NetworkSniffer\ConnectionId.cs" />
     <Compile Include="TeraModule\NetworkSniffer\EndpointIpv4.cs" />
     <Compile Include="TeraModule\NetworkSniffer\IpSniffer.cs" />
@@ -243,12 +247,9 @@
     <Compile Include="TeraModule\Tera.Core\Game\Services\HotDotDatabase.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\IconsDatabase.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\MessageFactory.cs" />
-    <Compile Include="TeraModule\Tera.Core\Game\Services\NpcDatabase.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\OpCodeNamer.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\ServerDatabase.cs" />
-    <Compile Include="TeraModule\Tera.Core\Game\Services\SkillDatabase.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Services\TeraMessageReader.cs" />
-    <Compile Include="TeraModule\Tera.Core\Game\Services\UserLogoTracker.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\Skill.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\SkillId.cs" />
     <Compile Include="TeraModule\Tera.Core\Game\UserEntity.cs" />
@@ -285,6 +286,9 @@
   <ItemGroup>
     <PackageReference Include="EasyHook">
       <Version>2.7.6684</Version>
+    </PackageReference>
+    <PackageReference Include="LiteDB">
+      <Version>4.1.4</Version>
     </PackageReference>
     <PackageReference Include="log4net">
       <Version>2.0.5</Version>

@@ -7,7 +7,7 @@ namespace TeraCompass.Tera.Core.Game
     {
         public ProjectileEntity(EntityId id, EntityId ownerId, Entity owner, Vector3f position, Angle heading,
             Vector3f finish, int speed, long time)
-            : base(id, position, heading, finish, speed, time)
+            : base(id, position)
         {
             OwnerId = ownerId;
             Owner = owner;

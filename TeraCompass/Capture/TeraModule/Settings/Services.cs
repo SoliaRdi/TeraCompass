@@ -62,6 +62,13 @@ namespace Capture.TeraModule.Settings
         }
 
         [Trackable]
+        public bool ShowGatherting
+        {
+            get => _showGatherting;
+            set => _showGatherting = value;
+        }
+
+        [Trackable]
         public int PlayerSize
         {
             get => _playerSize;
@@ -89,6 +96,7 @@ namespace Capture.TeraModule.Settings
         public bool _showRenderTime;
         public float _zoom;
         public int _playerSize;
+        public bool _showGatherting;
 
         public void ResetSettings()
         {
@@ -115,6 +123,7 @@ namespace Capture.TeraModule.Settings
             MarkGuildAsAlly = false;
             FilteredClasses = new HashSet<PlayerClass>();
             MyGuildName = "";
+            ShowGatherting = true;
         }
 
         [Trackable]

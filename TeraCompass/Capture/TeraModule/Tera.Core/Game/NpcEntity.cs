@@ -7,7 +7,7 @@ namespace TeraCompass.Tera.Core.Game
     public class NpcEntity : Entity, IHasOwner
     {
         public NpcEntity(EntityId id, EntityId ownerId, Entity owner, NpcInfo info, Vector3f position, Angle heading)
-            : base(id, position, heading)
+            : base(id, position)
         {
             OwnerId = ownerId;
             Owner = owner;

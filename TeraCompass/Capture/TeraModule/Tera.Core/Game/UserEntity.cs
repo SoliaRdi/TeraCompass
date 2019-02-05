@@ -16,7 +16,7 @@ namespace TeraCompass.Tera.Core.Game
         }
 
         internal UserEntity(SpawnUserServerMessage message)
-            : base(message.Id, message.Position, message.Heading)
+            : base(message.Id, message.Position)
         {
             Name = message.Name;
             GuildName = message.GuildName;
@@ -38,6 +38,7 @@ namespace TeraCompass.Tera.Core.Game
             ServerId = message.ServerId;
             Level = message.Level;
         }
+        public Angle Heading { get; set; }
         public string Name { get; set; }
         public string GuildName { get; set; }
         public RaceGenderClass RaceGenderClass { get; set; }
